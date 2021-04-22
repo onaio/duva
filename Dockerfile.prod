@@ -8,7 +8,7 @@ RUN useradd -m duva
 RUN mkdir -p /home/duva/.aws
 
 # Clone Duva application source code
-RUN git clone -b ${release_version} git@github.com:onaio/duva.git /app-cloned &&\
+RUN git clone -b ${release_version} https://github.com/onaio/duva.git /app-cloned &&\
     mv -f /app-cloned/* /app &&\
     chown -R duva:duva /app
 
