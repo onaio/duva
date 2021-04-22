@@ -1,0 +1,76 @@
+version: "3"
+
+services:
+  cache:
+    image: redis:6-alpine
+    ports:
+      - 6379:6379
+  db:
+    image: postgres:13
+    volumes:
+      - ../.duva_db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=duva
+      - POSTGRES_USER=duva
+      - POSTGRES_DB=duva
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hypermind:latest
+    stdin_open: true
+    tty: true
+    volumes:
+      # For local development
+      - .:/app
+      - ~/.aws:/root/.aws
+    ports:
+      - "8000:80"
+    depends_on:
+      - cache
+      - db
+    environment:
+      - REDIS_URL=redis://cache
+      - MEDIA_PATH=/app/media
+      - REDIS_URL=redis://cache:6379/1
+      - QUEUE_NAME=default
+      - CRON_SCHEDULE=*/30 * * * *
+      - DEBUG=True
+      - DATABASE_URL=postgresql://duva:duva@db/duva
+      - RUN_MIGRATION=True
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hypermind:latest
+    command: "bash init_scheduler.sh"
+    volumes:
+      # For local development
+      - .:/app
+      - ~/.aws:/root/.aws
+    depends_on:
+      - cache
+      - db
+    environment:
+      - REDIS_URL=redis://cache:6379/1
+      - QUEUE_NAME=default
+      - CRON_SCHEDULE=*/30 * * * *
+      - SCHEDULE_ALL=False
+      - DATABASE_URL=postgresql://duva:duva@db/duva
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hypermind:latest
+    command: "rq worker -c app.jobs.settings"
+    volumes:
+      # For local development
+      - .:/app
+      - ~/.aws:/root/.aws
+    depends_on:
+      - cache
+      - db
+    environment:
+      - REDIS_URL=redis://cache:6379/1
+      - QUEUE_NAME=default
+      - DATABASE_URL=postgresql://duva:duva@db/duva
