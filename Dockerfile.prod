@@ -18,5 +18,3 @@ RUN pip install --no-cache-dir -U pip && pip install --no-cache-dir -r /app/requ
 EXPOSE 8000
 
 CMD ["/start.sh"]
-
-USER duva
