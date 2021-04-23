@@ -1,0 +1,11 @@
+# Common Tags
+HYPER_PROCESS_CACHE_KEY = "HYPER_PROCESS"
+
+EVENT_STATUS_SUFFIX = "-event-status"
+
+ONADATA_TOKEN_ENDPOINT = "/o/token/"
+ONADATA_FORMS_ENDPOINT = "/api/v1/forms"
+ONADATA_USER_ENDPOINT = "/api/v1/user"
+
+SYNC_FAILURES_METADATA = "sync-failures"
+JOB_ID_METADATA = "job-id"

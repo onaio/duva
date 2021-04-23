@@ -1,0 +1,18 @@
+fastapi[all]  # Should probably switch this to fastapi
+alembic
+httpx
+tableauhyperapi
+fastapi-cache
+pyxform
+python-dateutil
+pandas
+boto3
+tableauserverclient
+sqlalchemy
+cryptography
+rq
+rq-scheduler
+psycopg2-binary
+redis
+pyjwt
+sentry-sdk

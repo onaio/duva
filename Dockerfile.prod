@@ -1,0 +1,20 @@
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
+ARG release_version=v0.0.1
+
+# Create application user
+RUN useradd -m duva
+
+# Create directory for AWS Configurations
+RUN mkdir -p /home/duva/.aws
+
+# Clone Duva application source code
+RUN git clone -b ${release_version} https://github.com/onaio/duva.git /app-cloned &&\
+    mv -f /app-cloned/* /app &&\
+    chown -R duva:duva /app
+
+# Install application requirements
+RUN pip install --no-cache-dir -U pip && pip install --no-cache-dir -r /app/requirements.pip
+
+EXPOSE 8000
+
+CMD ["/start.sh"]

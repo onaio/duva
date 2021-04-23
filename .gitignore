@@ -1,0 +1,10 @@
+__pycache__/
+media/*
+.vscode/
+hyperd*.log
+.DS_Store
+*.db
+MANIFEST
+.tox/
+.pytest_cache/
+.coverage

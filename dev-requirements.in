@@ -1,0 +1,9 @@
+ipdb
+pip-tools
+black
+flake8
+pre-commit
+pytest
+pytest-cov
+tox
+fakeredis
