@@ -6,6 +6,8 @@ from typing import Optional
 
 import httpx
 import sentry_sdk
+from redis import Redis
+from redis.exceptions import LockError
 from fastapi_cache import caches
 from sqlalchemy.orm.session import Session
 from tableauhyperapi import HyperProcess, Telemetry
@@ -17,6 +19,7 @@ from app.common_tags import (
     ONADATA_USER_ENDPOINT,
     JOB_ID_METADATA,
     HYPER_PROCESS_CACHE_KEY,
+    HYPERFILE_SYNC_LOCK_PREFIX,
 )
 from app.database import SessionLocal
 from app.models import HyperFile, Server, User
@@ -157,46 +160,57 @@ def start_csv_import_to_hyper(
     hyperfile_id: int, process: HyperProcess, schedule_cron: bool = True
 ):
     db = SessionLocal()
+    redis_client = Redis(
+        host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
+    )
     hyperfile: HyperFile = HyperFile.get(db, object_id=hyperfile_id)
     job_status: str = schemas.FileStatusEnum.file_available.value
     err: Exception = None
 
     if hyperfile:
-        user = User.get(db, hyperfile.user)
-        server = Server.get(db, user.server)
-
-        hyperfile.file_status = schemas.FileStatusEnum.syncing.value
-        db.commit()
-        db.refresh(hyperfile)
-
         try:
-            export = get_csv_export(hyperfile, user, server, db)
+            with redis_client.lock(f"{HYPERFILE_SYNC_LOCK_PREFIX}{hyperfile.id}"):
+                user = User.get(db, hyperfile.user)
+                server = Server.get(db, user.server)
 
-            if export:
-                handle_csv_import_to_hyperfile(hyperfile, export, process, db)
+                hyperfile.file_status = schemas.FileStatusEnum.syncing.value
+                db.commit()
+                db.refresh(hyperfile)
 
-                if schedule_cron and not hyperfile.meta_data.get(JOB_ID_METADATA):
-                    schedule_hyper_file_cron_job(
-                        start_csv_import_to_hyper_job, hyperfile_id
-                    )
-            else:
-                job_status = schemas.FileStatusEnum.file_unavailable.value
-        except (CSVExportFailure, ConnectionRequestError, Exception) as exc:
-            err = exc
-            job_status = schemas.FileStatusEnum.latest_sync_failed.value
+                try:
+                    export = get_csv_export(hyperfile, user, server, db)
 
-        successful_import = job_status == schemas.FileStatusEnum.file_available.value
-        handle_hyper_file_job_completion(
-            hyperfile.id,
-            db,
-            job_succeeded=successful_import,
-            object_updated=successful_import,
-            file_status=job_status,
-        )
-        db.close()
-        if err:
-            sentry_sdk.capture_exception(err)
-        return successful_import
+                    if export:
+                        handle_csv_import_to_hyperfile(hyperfile, export, process, db)
+
+                        if schedule_cron and not hyperfile.meta_data.get(
+                            JOB_ID_METADATA
+                        ):
+                            schedule_hyper_file_cron_job(
+                                start_csv_import_to_hyper_job, hyperfile_id
+                            )
+                    else:
+                        job_status = schemas.FileStatusEnum.file_unavailable.value
+                except (CSVExportFailure, ConnectionRequestError, Exception) as exc:
+                    err = exc
+                    job_status = schemas.FileStatusEnum.latest_sync_failed.value
+
+                successful_import = (
+                    job_status == schemas.FileStatusEnum.file_available.value
+                )
+                handle_hyper_file_job_completion(
+                    hyperfile.id,
+                    db,
+                    job_succeeded=successful_import,
+                    object_updated=successful_import,
+                    file_status=job_status,
+                )
+                db.close()
+                if err:
+                    sentry_sdk.capture_exception(err)
+                return successful_import
+        except LockError:
+            pass
 
 
 def start_csv_import_to_hyper_job(hyperfile_id: int, schedule_cron: bool = False):

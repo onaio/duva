@@ -12,7 +12,49 @@ TASK_TIMEOUT = os.environ.get("TASK_TIMEOUT", "3600")
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/1")
 REDIS_CONN = Redis.from_url(REDIS_URL)
 QUEUE = Queue(QUEUE_NAME, connection=REDIS_CONN)
-SCHEDULER = Scheduler(queue=QUEUE, connection=REDIS_CONN)
+
+
+class UniqueJobScheduler(Scheduler):
+    """
+    Custom Redis Queue scheduler that only allows unique cron jobs
+    to be scheduled
+    """
+
+    def cron(
+        self,
+        cron_string,
+        func,
+        args=None,
+        kwargs=None,
+        repeat=None,
+        queue_name=None,
+        id=None,
+        timeout=None,
+        description=None,
+        meta=None,
+        use_local_timezone=False,
+        depends_on=None,
+    ):
+        for job in self.get_jobs():
+            if job.func == func and job.args == args:
+                return job
+        super(UniqueJobScheduler, self).cron(
+            cron_string,
+            func,
+            args=args,
+            kwargs=kwargs,
+            repeat=repeat,
+            queue_name=queue_name,
+            id=id,
+            timeout=timeout,
+            description=description,
+            meta=meta,
+            use_local_timezone=use_local_timezone,
+            depends_on=depends_on,
+        )
+
+
+SCHEDULER = UniqueJobScheduler(queue=QUEUE, connection=REDIS_CONN)
 
 
 def cancel_job(job_id, job_args: list = None, func_name: str = None):
