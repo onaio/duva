@@ -1,5 +1,15 @@
 # Release Notes
 
+This project has been funded by DG ECHO and implemented by Caritas Switzerland and the CARMA Consortium.
+
+
+![DG ECHO](./docs/logos/EN-Funded-by-EU-NEG.png)
+
+![CARMA Logo](./docs/logos/CARMA-logo.png)
+
+![Caritas Switzerland Logo](./docs/logos/Caritas_5_100_100_0.png)
+
+
 All release notes for this project will be documented in this file; this project follows [Semantic Versioning](https://semver.org/).
 
 ## v0.0.1 - 2021-03-15
