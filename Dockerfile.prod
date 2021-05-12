@@ -5,7 +5,7 @@ ARG release_version=v0.0.1
 RUN useradd -m duva
 
 # Create directory for AWS Configurations
-RUN mkdir -p /home/duva/.aws
+RUN mkdir -p /home/duva/.aws /app/media
 
 # Clone Duva application source code
 RUN git clone -b ${release_version} https://github.com/onaio/duva.git /app-cloned &&\
