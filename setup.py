@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name="Duva",
-    version="0.0.1",
+    version="0.0.3",
     description="",
     author="Ona Kenya",
     license="Apache 2.0",
