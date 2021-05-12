@@ -4,7 +4,7 @@ from pydantic import BaseSettings
 class Settings(BaseSettings):
     app_name: str = "Duva"
     app_description: str = ""
-    app_version: str = "v0.0.2"
+    app_version: str = "v0.0.3"
     app_host: str = "127.0.0.1"
     app_port: int = 8000
     database_url: str = "sqlite:///./sqllite_db.db"
