@@ -38,7 +38,7 @@ class UniqueJobScheduler(Scheduler):
         for job in self.get_jobs():
             if job.func == func and job.args == args:
                 return job
-        super(UniqueJobScheduler, self).cron(
+        return super(UniqueJobScheduler, self).cron(
             cron_string,
             func,
             args=args,
