@@ -12,6 +12,22 @@ This project has been funded by DG ECHO and implemented by Caritas Switzerland a
 
 All release notes for this project will be documented in this file; this project follows [Semantic Versioning](https://semver.org/).
 
+## v0.0.3 - 2021-05-12
+
+### Bug fixes and improvements :bug:
+
+- Fix issue raised when queuing new jobs. PR [#13](https://github.com/onaio/duva/pull/13)
+
+## v0.0.2 - 2021-04-25
+
+### Bug fixes and improvements :bug:
+
+- Add sync lock mechanism and custom scheduler. PR [#7](https://github.com/onaio/duva/pull/7)
+
+### Known Issues
+
+- Fails to correctly store job ID for queued jobs. Issue [#11](https://github.com/onaio/duva/issues/11)
+
 ## v0.0.1 - 2021-03-15
 
 This is the first release :confetti_ball:.
