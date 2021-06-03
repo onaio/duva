@@ -11,8 +11,7 @@ class S3Client:
 
     """
 
-    def __init__(self):
-        self.s3 = boto3.resource("s3", region_name=settings.s3_region)
+    s3 = boto3.resource("s3", region_name=settings.s3_region)
 
     def upload(self, path, file_name):
         """
@@ -44,7 +43,10 @@ class S3Client:
             )
         except ClientError:
             return False
-        return resp.get("DeleteMarker")
+        return (
+            resp.get("ResponseMetadata").get("HTTPStatusCode") == 204
+            or "DeleteMarker" in resp.keys()
+        )
 
     def generate_presigned_download_url(self, file_path: str, expiration: int = 3600):
         """

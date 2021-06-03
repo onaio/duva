@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
 from httpx._models import Response
 
@@ -152,9 +152,7 @@ class TestFileRoute(TestBase):
         )
         self._cleanup_files()
 
-    @patch("app.routers.file.S3Client.delete")
-    def test_file_delete(self, mock_s3_delete, create_user_and_login):
-        mock_s3_delete.return_value = True
+    def test_file_delete(self, create_user_and_login):
         _, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
         jwt = jwt.decode("utf-8")
@@ -166,12 +164,29 @@ class TestFileRoute(TestBase):
         num_of_files += 1
         file_id = response.json().get("id")
 
-        response = self.client.delete(
-            f"/api/v1/files/{file_id}", headers=auth_credentials
-        )
-        assert response.status_code == 204
-        assert len(HyperFile.get_all(self.db)) == num_of_files - 1
-        self._cleanup_files()
+        with patch(
+            "app.routers.file.S3Client.s3", new_callable=PropertyMock
+        ) as S3ClientMock:
+            S3ClientMock().meta.client.delete_object.return_value = {
+                "ResponseMetadata": {
+                    "RequestId": "requestid",
+                    "HostId": "hostid",
+                    "HTTPStatusCode": 204,
+                    "HTTPHeaders": {
+                        "x-amz-id-2": "host-id",
+                        "x-amz-request-id": "79Z2PTFDP93EHVFD",
+                        "date": "Thu, 03 Jun 2021 09:26:28 GMT",
+                        "server": "AmazonS3",
+                    },
+                    "RetryAttempts": 0,
+                }
+            }
+            response = self.client.delete(
+                f"/api/v1/files/{file_id}", headers=auth_credentials
+            )
+            assert response.status_code == 204
+            assert len(HyperFile.get_all(self.db)) == num_of_files - 1
+            self._cleanup_files()
 
     @patch("app.routers.file.S3Client.generate_presigned_download_url")
     def test_file_with_config(self, mock_presigned_create, create_user_and_login):
