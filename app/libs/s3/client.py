@@ -43,7 +43,10 @@ class S3Client:
             )
         except ClientError:
             return False
-        return resp.get("DeleteMarker")
+        return (
+            resp.get("ResponseMetadata").get("HTTPStatusCode") == 204
+            or "DeleteMarker" in resp.keys()
+        )
 
     def generate_presigned_download_url(self, file_path: str, expiration: int = 3600):
         """
