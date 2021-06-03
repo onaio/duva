@@ -11,8 +11,7 @@ class S3Client:
 
     """
 
-    def __init__(self):
-        self.s3 = boto3.resource("s3", region_name=settings.s3_region)
+    s3 = boto3.resource("s3", region_name=settings.s3_region)
 
     def upload(self, path, file_name):
         """
