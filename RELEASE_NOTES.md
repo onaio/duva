@@ -12,6 +12,12 @@ This project has been funded by DG ECHO and implemented by Caritas Switzerland a
 
 All release notes for this project will be documented in this file; this project follows [Semantic Versioning](https://semver.org/).
 
+## v0.0.4 - 2021-06-03
+
+### Bug fixes and improvements :bug:
+
+- Ensure that deletions work as expected with S3. PR [#15](https://github.com/onaio/pull/15)
+
 ## v0.0.3 - 2021-05-12
 
 ### Bug fixes and improvements :bug:
