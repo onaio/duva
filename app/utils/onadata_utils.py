@@ -69,7 +69,7 @@ def get_access_token(user: User, server: Server, db: SessionLocal) -> Optional[s
 
 
 def _get_csv_export(
-    url: str, headers: dict = None, temp_token: str = None, retries: int = 0
+    url: str, headers: dict = None, retries: int = 0
 ):
     def _write_export_to_temp_file(export_url, headers, retry: int = 0):
         print("Writing to temporary CSV Export to temporary file.")
@@ -98,8 +98,6 @@ def _get_csv_export(
         job_status = resp.get("job_status")
         if "export_url" in resp and job_status == "SUCCESS":
             export_url = resp.get("export_url")
-            if temp_token:
-                export_url += f"&temp_token={temp_token}"
             return _write_export_to_temp_file(export_url, headers)
         elif job_status == "FAILURE":
             reason = resp.get("progress")
@@ -113,7 +111,7 @@ def _get_csv_export(
         if retries < 3:
             time.sleep(30 * (retries + 1))
             return _get_csv_export(
-                url, headers=headers, temp_token=temp_token, retries=retries + 1
+                url, headers=headers, retries=retries + 1
             )
         else:
             raise ConnectionRequestError(
@@ -139,19 +137,9 @@ def get_csv_export(
     form_url = f"{server.url}{ONADATA_FORMS_ENDPOINT}/{hyperfile.form_id}"
     resp = httpx.get(form_url + ".json", headers=headers)
     if resp.status_code == 200:
-        form_data = resp.json()
-        public = form_data.get("public")
         url = f"{form_url}/export_async.json?format=csv"
-        temp_token = None
 
-        # Retrieve auth credentials if XForm is private
-        # Onadatas' Export Endpoint only support TempToken or Basic Authentication
-        if not public:
-            resp = httpx.get(
-                f"{server.url}{ONADATA_USER_ENDPOINT}.json", headers=headers
-            )
-            temp_token = resp.json().get("temp_token")
-        csv_export = _get_csv_export(url, headers, temp_token)
+        csv_export = _get_csv_export(url, headers)
         if csv_export:
             return Path(csv_export.name)
 
