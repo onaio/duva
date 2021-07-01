@@ -68,35 +68,36 @@ def get_access_token(user: User, server: Server, db: SessionLocal) -> Optional[s
     return None
 
 
-def _get_csv_export(url: str, headers: dict = None, retries: int = 0):
-    def _write_export_to_temp_file(export_url, headers, retry: int = 0):
-        print("Writing to temporary CSV Export to temporary file.")
-        retry = 0 or retry
-        status = 0
-        with NamedTemporaryFile(delete=False, suffix=".csv") as export:
-            with httpx.stream("GET", export_url, headers=headers) as response:
-                if response.status_code == 200:
-                    for chunk in response.iter_bytes():
-                        export.write(chunk)
-                    return export
-                status = response.status_code
-        if retry < 3:
-            print(
-                f"Retrying export write: Status {status}, Retry {retry}, URL {export_url}"
-            )
-            _write_export_to_temp_file(
-                export_url=export_url, headers=headers, retry=retry + 1
-            )
+def write_export_to_temp_file(export_url, client, retry: int = 0):
+    print("Writing to temporary CSV Export to temporary file.")
+    retry = 0 or retry
+    status = 0
+    with NamedTemporaryFile(delete=False, suffix=".csv") as export:
+        with client.stream("GET", export_url) as response:
+            if response.status_code == 200:
+                for chunk in response.iter_bytes():
+                    export.write(chunk)
+                return export
+            status = response.status_code
+    if retry < 3:
+        print(
+            f"Retrying export write: Status {status}, Retry {retry}, URL {export_url}"
+        )
+        write_export_to_temp_file(export_url=export_url, client=client, retry=retry + 1)
 
+
+def _get_csv_export(
+    url: str, client, retries: int = 0, sleep_when_in_progress: bool = True
+):
     print("Checking on export status.")
-    resp = httpx.get(url, headers=headers)
+    resp = client.get(url)
 
     if resp.status_code == 202:
         resp = resp.json()
         job_status = resp.get("job_status")
         if "export_url" in resp and job_status == "SUCCESS":
             export_url = resp.get("export_url")
-            return _write_export_to_temp_file(export_url, headers)
+            return write_export_to_temp_file(export_url, client)
         elif job_status == "FAILURE":
             reason = resp.get("progress")
             raise CSVExportFailure(f"CSV Export Failure. Reason: {reason}")
@@ -107,8 +108,9 @@ def _get_csv_export(url: str, headers: dict = None, retries: int = 0):
             url += f"&job_uuid={job_uuid}"
 
         if retries < 3:
-            time.sleep(30 * (retries + 1))
-            return _get_csv_export(url, headers=headers, retries=retries + 1)
+            if sleep_when_in_progress:
+                time.sleep(30 * (retries + 1))
+            return _get_csv_export(url, client, retries=retries + 1)
         else:
             raise ConnectionRequestError(
                 f"Failed to retrieve CSV Export. URL: {url}, took too long for CSV Export to be ready"
@@ -134,18 +136,19 @@ def get_csv_export(
         "user-agent": f"{settings.app_name}/{settings.app_version}",
         "Authorization": f"Bearer {bearer_token}",
     }
-    form_url = f"{server.url}{ONADATA_FORMS_ENDPOINT}/{hyperfile.form_id}"
-    resp = httpx.get(form_url + ".json", headers=headers)
-    if resp.status_code == 200:
-        url = f"{form_url}/export_async.json?format=csv"
+    with httpx.Client(headers=headers) as client:
+        form_url = f"{server.url}{ONADATA_FORMS_ENDPOINT}/{hyperfile.form_id}"
+        resp = client.get(form_url + ".json")
+        if resp.status_code == 200:
+            url = f"{form_url}/export_async.json?format=csv"
 
-        if export_configuration:
-            for key, value in export_configuration.items():
-                url += f"&{key}={value}"
+            if export_configuration:
+                for key, value in export_configuration.items():
+                    url += f"&{key}={value}"
 
-        csv_export = _get_csv_export(url, headers)
-        if csv_export:
-            return Path(csv_export.name)
+            csv_export = _get_csv_export(url, client)
+            if csv_export:
+                return Path(csv_export.name)
 
 
 def start_csv_import_to_hyper(
