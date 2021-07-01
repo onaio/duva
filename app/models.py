@@ -162,7 +162,9 @@ class Server(ModelMixin, EncryptionMixin, Base):
 
 class User(ModelMixin, EncryptionMixin, Base):
     __tablename__ = "user"
-    __table_args__ = (UniqueConstraint("server_id", "username", name="_server_user_uc"),)
+    __table_args__ = (
+        UniqueConstraint("server_id", "username", name="_server_user_uc"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String)
@@ -187,7 +189,9 @@ class User(ModelMixin, EncryptionMixin, Base):
     def create(cls, db: Session, user: schemas.User):
         encrypted_token = cls.encrypt_value(user.refresh_token)
         user = cls(
-            username=user.username, refresh_token=encrypted_token, server_id=user.server_id
+            username=user.username,
+            refresh_token=encrypted_token,
+            server_id=user.server_id,
         )
         db.add(user)
         db.commit()

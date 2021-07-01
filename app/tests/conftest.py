@@ -51,7 +51,9 @@ def create_user_and_login():
 
     user = User.create(
         db,
-        schemas.User(username="bob", refresh_token="somes3cr3tvalu3", server_id=server.id),
+        schemas.User(
+            username="bob", refresh_token="somes3cr3tvalu3", server_id=server.id
+        ),
     )
 
     _, bearer_token = create_session(user, redis_client)

@@ -50,7 +50,13 @@ class TestOnadataUtils(TestBase):
     @patch("app.utils.onadata_utils.httpx.get")
     @patch("app.utils.onadata_utils.get_access_token")
     @patch("app.utils.onadata_utils._get_csv_export")
-    def test_get_csv_export(self, mock_get_csv_export, mock_get_access_token, mock_httpx_get, create_user_and_login):
+    def test_get_csv_export(
+        self,
+        mock_get_csv_export,
+        mock_get_access_token,
+        mock_httpx_get,
+        create_user_and_login,
+    ):
         """
         Test the get_csv_export function correctly generates the correct
         requests to retrieve a CSV Export
@@ -64,28 +70,26 @@ class TestOnadataUtils(TestBase):
             ),
         )
         file_mock = MagicMock()
-        file_mock.name = '/tmp/test'
+        file_mock.name = "/tmp/test"
         mock_httpx_get.return_value = Response(
-            json={
-                "id_string": "test"
-            },
-            status_code=200
+            json={"id_string": "test"}, status_code=200
         )
         mock_get_csv_export.return_value = file_mock
         mock_get_access_token.return_value = "bob"
 
         ret = get_csv_export(
-            hyperfile, user, user.server, self.db, export_configuration={
-            'include_labels': 'true'
-        })
-        assert ret == Path(file_mock.name)
-        mock_get_access_token.assert_called_with(
-            user, server, self.db
+            hyperfile,
+            user,
+            user.server,
+            self.db,
+            export_configuration={"include_labels": "true"},
         )
+        assert ret == Path(file_mock.name)
+        mock_get_access_token.assert_called_with(user, server, self.db)
         mock_get_csv_export.assert_called_with(
             f"{server.url}/api/v1/forms/{hyperfile.form_id}/export_async.json?format=csv&include_labels=true",
             {
                 "user-agent": f"{settings.app_name}/{settings.app_version}",
-                "Authorization": "Bearer bob"
-            }
+                "Authorization": "Bearer bob",
+            },
         )
