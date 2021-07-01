@@ -110,7 +110,12 @@ def _get_csv_export(
         if retries < 3:
             if sleep_when_in_progress:
                 time.sleep(30 * (retries + 1))
-            return _get_csv_export(url, client, retries=retries + 1)
+            return _get_csv_export(
+                url,
+                client,
+                retries=retries + 1,
+                sleep_when_in_progress=sleep_when_in_progress,
+            )
         else:
             raise ConnectionRequestError(
                 f"Failed to retrieve CSV Export. URL: {url}, took too long for CSV Export to be ready"
