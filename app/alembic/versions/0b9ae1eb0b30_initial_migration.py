@@ -33,7 +33,7 @@ def upgrade():
         sa.Column("username", sa.String(), nullable=True),
         sa.Column("refresh_token", sa.String(), nullable=True),
         sa.Column("server", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["server"], ["server.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["server"], ["server.id"], ondelete="CASCADE", name="user_server_fkey"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("server", "username", name="_server_user_uc"),
     )

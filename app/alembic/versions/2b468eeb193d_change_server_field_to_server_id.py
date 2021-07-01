@@ -21,9 +21,9 @@ def upgrade():
     op.add_column("user", sa.Column("server_id", sa.Integer(), nullable=True))
     op.drop_constraint("_server_user_uc", "user", type_="unique")
     op.create_unique_constraint("_server_user_uc", "user", ["server_id", "username"])
-    op.drop_constraint(None, "user", type_="foreignkey")
+    op.drop_constraint("user_server_fkey", "user", type_="foreignkey")
     op.create_foreign_key(
-        None, "user", "server", ["server_id"], ["id"], ondelete="CASCADE"
+        "user_server_fkey", "user", "server", ["server_id"], ["id"], ondelete="CASCADE"
     )
     op.drop_column("user", "server")
     # ### end Alembic commands ###
