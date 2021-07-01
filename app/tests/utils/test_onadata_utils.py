@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 from httpx._models import Response
 
 from app import schemas
-from app.settings import settings
 from app.models import Server, User, HyperFile
 from app.tests.test_base import TestBase
 from app.utils.onadata_utils import (

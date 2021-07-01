@@ -16,7 +16,6 @@ from app import schemas
 from app.common_tags import (
     ONADATA_TOKEN_ENDPOINT,
     ONADATA_FORMS_ENDPOINT,
-    ONADATA_USER_ENDPOINT,
     JOB_ID_METADATA,
     HYPER_PROCESS_CACHE_KEY,
     HYPERFILE_SYNC_LOCK_PREFIX,
