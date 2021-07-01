@@ -160,11 +160,11 @@ def start_csv_import_to_hyper(
     process: HyperProcess,
     schedule_cron: bool = True,
     include_labels: bool = True,
-    remove_group_name: bool = False,
-    do_not_split_select_multiples: bool = False,
+    remove_group_name: bool = True,
+    do_not_split_select_multiples: bool = True,
     include_reviews: bool = False,
     include_images: bool = False,
-    include_labels_only: bool = False,
+    include_labels_only: bool = True,
 ):
     """
     Starts a CSV Export importation process that imports CSV Data into
