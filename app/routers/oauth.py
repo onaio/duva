@@ -125,7 +125,7 @@ def handle_oauth_callback(
             user = User.get_using_server_and_username(db, username, server.id)
             if not user:
                 user_data = schemas.User(
-                    username=username, refresh_token=refresh_token, server=server.id
+                    username=username, refresh_token=refresh_token, server_id=server.id
                 )
                 user = User.create(db, user_data)
             else:

@@ -43,7 +43,7 @@ class Server(ServerCreate):
 class User(BaseModel):
     username: str
     refresh_token: str
-    server: int
+    server_id: int
 
 
 class FileBase(BaseModel):

@@ -187,7 +187,7 @@ def start_csv_import_to_hyper(
         try:
             with redis_client.lock(f"{HYPERFILE_SYNC_LOCK_PREFIX}{hyperfile.id}"):
                 user = User.get(db, hyperfile.user)
-                server = Server.get(db, user.server)
+                server = user.server
 
                 hyperfile.file_status = schemas.FileStatusEnum.syncing.value
                 db.commit()
@@ -264,7 +264,7 @@ def create_or_get_hyperfile(
 
     headers = {"user-agent": f"{settings.app_name}/{settings.app_version}"}
     user = User.get(db, file_data.user)
-    server = Server.get(db, user.server)
+    server = user.server
     bearer_token = get_access_token(user, server, db)
     headers.update({"Authorization": f"Bearer {bearer_token}"})
 
