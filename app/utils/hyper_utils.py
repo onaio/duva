@@ -18,6 +18,7 @@ from tableauhyperapi import (
     escape_string_literal,
     TableDefinition,
     CreateMode,
+    Name,
 )
 
 from app.database import SessionLocal
@@ -86,7 +87,7 @@ def _prep_csv_for_import(csv_path: Path) -> List[TableDefinition.Column]:
     df = df.convert_dtypes()
     for name, dtype in df.dtypes.iteritems():
         column = TableDefinition.Column(
-            name, _pandas_type_to_hyper_sql_type(dtype.kind)()
+            Name(name), _pandas_type_to_hyper_sql_type(dtype.kind)()
         )
         columns.append(column)
     # Save dataframe to CSV as the dataframe is more cleaner
