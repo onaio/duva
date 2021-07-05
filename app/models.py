@@ -99,7 +99,7 @@ class HyperFile(ModelMixin, Base):
 
     def get_file_path(self, db: Session):
         user = User.get(db, self.user)
-        s3_path = f"{user.server}/{user.username}/{self.form_id}_{self.filename}"
+        s3_path = f"{user.server_id}/{user.username}/{self.form_id}_{self.filename}"
         return s3_path
 
     def retrieve_latest_file(self, db: Session):
@@ -162,12 +162,15 @@ class Server(ModelMixin, EncryptionMixin, Base):
 
 class User(ModelMixin, EncryptionMixin, Base):
     __tablename__ = "user"
-    __table_args__ = (UniqueConstraint("server", "username", name="_server_user_uc"),)
+    __table_args__ = (
+        UniqueConstraint("server_id", "username", name="_server_user_uc"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String)
     refresh_token = Column(String)
-    server = Column(Integer, ForeignKey("server.id", ondelete="CASCADE"))
+    server_id = Column(Integer, ForeignKey("server.id", ondelete="CASCADE"))
+    server = relationship("Server")
     files = relationship("HyperFile")
 
     @classmethod
@@ -178,7 +181,7 @@ class User(ModelMixin, EncryptionMixin, Base):
     def get_using_server_and_username(cls, db: Session, username: str, server_id: int):
         return (
             db.query(cls)
-            .filter(cls.username == username, cls.server == server_id)
+            .filter(cls.username == username, cls.server_id == server_id)
             .first()
         )
 
@@ -186,7 +189,9 @@ class User(ModelMixin, EncryptionMixin, Base):
     def create(cls, db: Session, user: schemas.User):
         encrypted_token = cls.encrypt_value(user.refresh_token)
         user = cls(
-            username=user.username, refresh_token=encrypted_token, server=user.server
+            username=user.username,
+            refresh_token=encrypted_token,
+            server_id=user.server_id,
         )
         db.add(user)
         db.commit()

@@ -16,7 +16,6 @@ from app import schemas
 from app.common_tags import (
     ONADATA_TOKEN_ENDPOINT,
     ONADATA_FORMS_ENDPOINT,
-    ONADATA_USER_ENDPOINT,
     JOB_ID_METADATA,
     HYPER_PROCESS_CACHE_KEY,
     HYPERFILE_SYNC_LOCK_PREFIX,
@@ -68,39 +67,36 @@ def get_access_token(user: User, server: Server, db: SessionLocal) -> Optional[s
     return None
 
 
-def _get_csv_export(
-    url: str, headers: dict = None, temp_token: str = None, retries: int = 0
-):
-    def _write_export_to_temp_file(export_url, headers, retry: int = 0):
-        print("Writing to temporary CSV Export to temporary file.")
-        retry = 0 or retry
-        status = 0
-        with NamedTemporaryFile(delete=False, suffix=".csv") as export:
-            with httpx.stream("GET", export_url, headers=headers) as response:
-                if response.status_code == 200:
-                    for chunk in response.iter_bytes():
-                        export.write(chunk)
-                    return export
-                status = response.status_code
-        if retry < 3:
-            print(
-                f"Retrying export write: Status {status}, Retry {retry}, URL {export_url}"
-            )
-            _write_export_to_temp_file(
-                export_url=export_url, headers=headers, retry=retry + 1
-            )
+def write_export_to_temp_file(export_url, client, retry: int = 0):
+    print("Writing to temporary CSV Export to temporary file.")
+    retry = 0 or retry
+    status = 0
+    with NamedTemporaryFile(delete=False, suffix=".csv") as export:
+        with client.stream("GET", export_url) as response:
+            if response.status_code == 200:
+                for chunk in response.iter_bytes():
+                    export.write(chunk)
+                return export
+            status = response.status_code
+    if retry < 3:
+        print(
+            f"Retrying export write: Status {status}, Retry {retry}, URL {export_url}"
+        )
+        write_export_to_temp_file(export_url=export_url, client=client, retry=retry + 1)
 
+
+def _get_csv_export(
+    url: str, client, retries: int = 0, sleep_when_in_progress: bool = True
+):
     print("Checking on export status.")
-    resp = httpx.get(url, headers=headers)
+    resp = client.get(url)
 
     if resp.status_code == 202:
         resp = resp.json()
         job_status = resp.get("job_status")
         if "export_url" in resp and job_status == "SUCCESS":
             export_url = resp.get("export_url")
-            if temp_token:
-                export_url += f"&temp_token={temp_token}"
-            return _write_export_to_temp_file(export_url, headers)
+            return write_export_to_temp_file(export_url, client)
         elif job_status == "FAILURE":
             reason = resp.get("progress")
             raise CSVExportFailure(f"CSV Export Failure. Reason: {reason}")
@@ -111,9 +107,13 @@ def _get_csv_export(
             url += f"&job_uuid={job_uuid}"
 
         if retries < 3:
-            time.sleep(30 * (retries + 1))
+            if sleep_when_in_progress:
+                time.sleep(30 * (retries + 1))
             return _get_csv_export(
-                url, headers=headers, temp_token=temp_token, retries=retries + 1
+                url,
+                client,
+                retries=retries + 1,
+                sleep_when_in_progress=sleep_when_in_progress,
             )
         else:
             raise ConnectionRequestError(
@@ -126,7 +126,11 @@ def _get_csv_export(
 
 
 def get_csv_export(
-    hyperfile: HyperFile, user: schemas.User, server: schemas.Server, db: SessionLocal
+    hyperfile: HyperFile,
+    user: schemas.User,
+    server: schemas.Server,
+    db: SessionLocal,
+    export_configuration: dict = None,
 ) -> str:
     """
     Retrieves a CSV Export for an XForm linked to a Hyperfile
@@ -136,29 +140,48 @@ def get_csv_export(
         "user-agent": f"{settings.app_name}/{settings.app_version}",
         "Authorization": f"Bearer {bearer_token}",
     }
-    form_url = f"{server.url}{ONADATA_FORMS_ENDPOINT}/{hyperfile.form_id}"
-    resp = httpx.get(form_url + ".json", headers=headers)
-    if resp.status_code == 200:
-        form_data = resp.json()
-        public = form_data.get("public")
-        url = f"{form_url}/export_async.json?format=csv"
-        temp_token = None
+    with httpx.Client(headers=headers) as client:
+        form_url = f"{server.url}{ONADATA_FORMS_ENDPOINT}/{hyperfile.form_id}"
+        resp = client.get(form_url + ".json")
+        if resp.status_code == 200:
+            url = f"{form_url}/export_async.json?format=csv"
 
-        # Retrieve auth credentials if XForm is private
-        # Onadatas' Export Endpoint only support TempToken or Basic Authentication
-        if not public:
-            resp = httpx.get(
-                f"{server.url}{ONADATA_USER_ENDPOINT}.json", headers=headers
-            )
-            temp_token = resp.json().get("temp_token")
-        csv_export = _get_csv_export(url, headers, temp_token)
-        if csv_export:
-            return Path(csv_export.name)
+            if export_configuration:
+                for key, value in export_configuration.items():
+                    url += f"&{key}={value}"
+
+            csv_export = _get_csv_export(url, client)
+            if csv_export:
+                return Path(csv_export.name)
 
 
 def start_csv_import_to_hyper(
-    hyperfile_id: int, process: HyperProcess, schedule_cron: bool = True
+    hyperfile_id: int,
+    process: HyperProcess,
+    schedule_cron: bool = True,
+    include_labels: bool = True,
+    remove_group_name: bool = True,
+    do_not_split_select_multiples: bool = True,
+    include_reviews: bool = False,
+    include_images: bool = False,
+    include_labels_only: bool = True,
 ):
+    """
+    Starts a CSV Export importation process that imports CSV Data into
+    a Tableau hyper database.
+
+    params:
+    hyperfile_id :: int : A unique identifier for a HyperFile object
+    schedule_cron :: bool : Whether to schedule a cron job that triggers a CSV Import
+                            periodically.
+    include_labels :: bool : Whether to request an OnaData CSV Export with labels included as headers
+                             and values
+    remove_group_names :: bool : Whether to request an OnaData CSV Export without the column group names included in the header
+    do_not_split_select_multiples :: bool : Whether to request an OnaData CSV Export that doesn't splict select multiples into different columns
+    include_reviews :: bool : Whether to request an OnaData CSV Export that includes review
+    include_images :: bool : Whether to request an OnaData CSV Export that includes image URLs
+    include_labels_only :: bool : Whether to request an OnaData CSV Export that includes labels only
+    """
     db = SessionLocal()
     redis_client = Redis(
         host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
@@ -171,14 +194,30 @@ def start_csv_import_to_hyper(
         try:
             with redis_client.lock(f"{HYPERFILE_SYNC_LOCK_PREFIX}{hyperfile.id}"):
                 user = User.get(db, hyperfile.user)
-                server = Server.get(db, user.server)
+                server = user.server
 
                 hyperfile.file_status = schemas.FileStatusEnum.syncing.value
                 db.commit()
                 db.refresh(hyperfile)
 
                 try:
-                    export = get_csv_export(hyperfile, user, server, db)
+                    export_configuration = {
+                        "include_labels": str(include_labels).lower(),
+                        "remove_group_name": str(remove_group_name).lower(),
+                        "do_not_split_select_multiples": str(
+                            do_not_split_select_multiples
+                        ).lower(),
+                        "include_reviews": str(include_reviews).lower(),
+                        "include_images": str(include_images).lower(),
+                        "include_labels_only": str(include_labels_only).lower(),
+                    }
+                    export = get_csv_export(
+                        hyperfile,
+                        user,
+                        server,
+                        db,
+                        export_configuration=export_configuration,
+                    )
 
                     if export:
                         handle_csv_import_to_hyperfile(hyperfile, export, process, db)
@@ -232,7 +271,7 @@ def create_or_get_hyperfile(
 
     headers = {"user-agent": f"{settings.app_name}/{settings.app_version}"}
     user = User.get(db, file_data.user)
-    server = Server.get(db, user.server)
+    server = user.server
     bearer_token = get_access_token(user, server, db)
     headers.update({"Authorization": f"Bearer {bearer_token}"})
 

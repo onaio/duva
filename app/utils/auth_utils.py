@@ -26,7 +26,7 @@ def create_session(
     jwt_data = {
         "username": user.username,
         "session-id": session_id,
-        "server_id": user.server,
+        "server_id": user.server_id,
     }
     encoded_jwt = jwt.encode(jwt_data, settings.secret_key, algorithm="HS256")
 
