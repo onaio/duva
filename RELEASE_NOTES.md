@@ -12,6 +12,12 @@ This project has been funded by DG ECHO and implemented by Caritas Switzerland a
 
 All release notes for this project will be documented in this file; this project follows [Semantic Versioning](https://semver.org/).
 
+## v0.0.5 - 2021-07-05
+
+### Bug fixes and improvements :bug:
+
+- Include question labels as headers & values instead of using the column name & value. PR [#20](https://github.com/onaio/duva/pull/20)
+
 ## v0.0.4 - 2021-06-03
 
 ### Bug fixes and improvements :bug:
