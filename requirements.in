@@ -16,3 +16,4 @@ psycopg2-binary
 redis
 pyjwt
 sentry-sdk
+starlette_exporter

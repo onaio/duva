@@ -9,6 +9,8 @@ from fastapi_cache.backends.redis import CACHE_KEY, RedisCacheBackend
 from tableauhyperapi import HyperProcess, Telemetry
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette_exporter import PrometheusMiddleware, handle_metrics
+from redis import Redis
 
 from app.common_tags import HYPER_PROCESS_CACHE_KEY
 from app.database import engine
@@ -46,11 +48,18 @@ app.add_middleware(
     allow_headers=settings.cors_allowed_headers,
     max_age=settings.cors_max_age,
 )
+app.add_middleware(
+    PrometheusMiddleware,
+    app_name="duva",
+    prefix="duva",
+    filter_unhandled_paths=True
+)
 if settings.sentry_dsn:
     sentry_sdk.init(dsn=settings.sentry_dsn, release=settings.app_version)
     app.add_middleware(SentryAsgiMiddleware)
 
 # Include routes
+app.add_route("/metrics", handle_metrics)
 app.include_router(server_router, tags=["Server Configuration"])
 app.include_router(oauth_router, tags=["OAuth2"])
 app.include_router(file_router, tags=["Hyper File"])
