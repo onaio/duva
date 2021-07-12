@@ -31,9 +31,18 @@ from app.utils.hyper_utils import (
 )
 
 
-IN_PROGRESS_HYPER_IMPORT = Gauge('in_progress_hyper_import', 'Number of Import processes currently running for Tableau Hyper databases')
-SUCCESSFUL_IMPORTS = Counter('successful_hyper_database_imports', 'Number of successfull imports to a hyper database')
-FAILED_IMPORTS = Counter('failed_hyper_database_imports', 'Number of failed imports to a hyper database')
+IN_PROGRESS_HYPER_IMPORT = Gauge(
+    "in_progress_hyper_import",
+    "Number of Import processes currently running for Tableau Hyper databases",
+)
+SUCCESSFUL_IMPORTS = Counter(
+    "successful_hyper_database_imports",
+    "Number of successfull imports to a hyper database",
+)
+FAILED_IMPORTS = Counter(
+    "failed_hyper_database_imports", "Number of failed imports to a hyper database"
+)
+
 
 class UnsupportedForm(Exception):
     pass

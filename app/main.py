@@ -50,10 +50,7 @@ app.add_middleware(
     max_age=settings.cors_max_age,
 )
 app.add_middleware(
-    PrometheusMiddleware,
-    app_name="duva",
-    prefix="duva",
-    filter_unhandled_paths=True
+    PrometheusMiddleware, app_name="duva", prefix="duva", filter_unhandled_paths=True
 )
 if settings.sentry_dsn:
     sentry_sdk.init(dsn=settings.sentry_dsn, release=settings.app_version)
@@ -98,10 +95,13 @@ def service_health(request: Request):
     except Exception:
         cache_reachable = False
 
-    return JSONResponse({
-        "Database": "OK" if database_reachable else "FAILING",
-        "Cache": "OK" if cache_reachable else "FAILING"
-    }, 200 if (database_reachable and cache_reachable) else 500)
+    return JSONResponse(
+        {
+            "Database": "OK" if database_reachable else "FAILING",
+            "Cache": "OK" if cache_reachable else "FAILING",
+        },
+        200 if (database_reachable and cache_reachable) else 500,
+    )
 
 
 @app.on_event("startup")
