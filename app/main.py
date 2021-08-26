@@ -91,7 +91,7 @@ def service_health(request: Request):
         host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
     )
     try:
-        resp = redis_client.ping()
+        redis_client.ping()
     except Exception:
         cache_reachable = False
 
