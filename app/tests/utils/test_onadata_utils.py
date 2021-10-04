@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 from httpx._models import Response
 
 from app import schemas
-from app.models import Server, User, HyperFile
+from app.models import Server, User, HyperFile, Configuration
 from app.tests.test_base import TestBase
 from app.utils.onadata_utils import (
     get_access_token,
@@ -67,12 +67,25 @@ class TestOnadataUtils(TestBase):
         """
         user, _ = create_user_and_login
         server = user.server
+        configuration = Configuration.create(
+            self.db,
+            schemas.ConfigurationCreate(
+                user=user.id,
+                server_address="http://testserver",
+                site_name="test",
+                token_name="test",
+                token_value="test",
+                project_name="test",
+            ),
+        )
         hyperfile = HyperFile.create(
             self.db,
             schemas.FileCreate(
                 user=user.id, filename="test.hyper", is_active=True, form_id="111"
             ),
         )
+        hyperfile.configuration_id = configuration.id
+        self.db.commit()
         file_mock = MagicMock()
         file_mock.name = "/tmp/test"
         mock_httpx_client().__enter__().get.return_value = Response(
@@ -87,12 +100,17 @@ class TestOnadataUtils(TestBase):
                 user,
                 user.server,
                 self.db,
-                export_configuration={"include_labels": "true"},
             )
             assert ret == Path(file_mock.name)
             mock_get_access_token.assert_called_with(user, server, self.db)
+            expected_query_params = "&".join(
+                [
+                    f"{param}={value}"
+                    for param, value in configuration.export_settings.items()
+                ]
+            )
             mock_get_csv_export.assert_called_with(
-                f"{server.url}/api/v1/forms/{hyperfile.form_id}/export_async.json?format=csv&include_labels=true",
+                f"{server.url}/api/v1/forms/{hyperfile.form_id}/export_async.json?format=csv&{expected_query_params}",
                 mock_httpx_client().__enter__(),
             )
 
