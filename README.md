@@ -44,6 +44,13 @@ $ pip install -r requirements.pip
 $ pip install -r dev-requirements.pip
 ```
 
+5. Create postgres user & database for the application
+
+```sh
+$ psql -c "CREATE USER duva WITH PASSWORD 'duva';"
+$ psql -c "CREATE DATABASE duva OWNER duva;"
+```
+
 At this point the application can be started. _Note: Ensure the redis server has been started_
 
 ```
