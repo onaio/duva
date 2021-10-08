@@ -11,6 +11,7 @@ from redis.exceptions import LockError
 from fastapi_cache import caches
 from sqlalchemy.orm.session import Session
 from tableauhyperapi import HyperProcess, Telemetry
+from prometheus_client import Gauge, Counter
 
 from app import schemas
 from app.common_tags import (
@@ -27,6 +28,19 @@ from app.utils.hyper_utils import (
     handle_csv_import_to_hyperfile,
     handle_hyper_file_job_completion,
     schedule_hyper_file_cron_job,
+)
+
+
+IN_PROGRESS_HYPER_IMPORT = Gauge(
+    "in_progress_hyper_import",
+    "Number of Import processes currently running for Tableau Hyper databases",
+)
+SUCCESSFUL_IMPORTS = Counter(
+    "successful_hyper_database_imports",
+    "Number of successfull imports to a hyper database",
+)
+FAILED_IMPORTS = Counter(
+    "failed_hyper_database_imports", "Number of failed imports to a hyper database"
 )
 
 
@@ -154,6 +168,7 @@ def get_csv_export(
                 return Path(csv_export.name)
 
 
+@IN_PROGRESS_HYPER_IMPORT.track_inprogress()
 def start_csv_import_to_hyper(
     hyperfile_id: int,
     process: HyperProcess,
@@ -221,7 +236,9 @@ def start_csv_import_to_hyper(
                 )
                 db.close()
                 if err:
+                    FAILED_IMPORTS.inc()
                     sentry_sdk.capture_exception(err)
+                SUCCESSFUL_IMPORTS.inc()
                 return successful_import
         except LockError:
             pass
