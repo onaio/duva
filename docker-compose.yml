@@ -37,7 +37,7 @@ services:
       - CRON_SCHEDULE=*/30 * * * *
       - DEBUG=True
       - DATABASE_URL=postgresql://duva:duva@db/duva
-      - RUN_MIGRATION=True
+      - RUN_MIGRATIONS=True
   scheduler:
     build:
       context: .

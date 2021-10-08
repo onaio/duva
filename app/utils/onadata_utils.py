@@ -144,7 +144,6 @@ def get_csv_export(
     user: schemas.User,
     server: schemas.Server,
     db: SessionLocal,
-    export_configuration: dict = None,
 ) -> str:
     """
     Retrieves a CSV Export for an XForm linked to a Hyperfile
@@ -159,9 +158,9 @@ def get_csv_export(
         resp = client.get(form_url + ".json")
         if resp.status_code == 200:
             url = f"{form_url}/export_async.json?format=csv"
-
-            if export_configuration:
-                for key, value in export_configuration.items():
+            if hyperfile.configuration:
+                export_settings = hyperfile.configuration.export_settings
+                for key, value in export_settings.items():
                     url += f"&{key}={value}"
 
             csv_export = _get_csv_export(url, client)
@@ -174,12 +173,6 @@ def start_csv_import_to_hyper(
     hyperfile_id: int,
     process: HyperProcess,
     schedule_cron: bool = True,
-    include_labels: bool = True,
-    remove_group_name: bool = True,
-    do_not_split_select_multiples: bool = True,
-    include_reviews: bool = False,
-    include_images: bool = False,
-    include_labels_only: bool = True,
 ):
     """
     Starts a CSV Export importation process that imports CSV Data into
@@ -189,13 +182,6 @@ def start_csv_import_to_hyper(
     hyperfile_id :: int : A unique identifier for a HyperFile object
     schedule_cron :: bool : Whether to schedule a cron job that triggers a CSV Import
                             periodically.
-    include_labels :: bool : Whether to request an OnaData CSV Export with labels included as headers
-                             and values
-    remove_group_names :: bool : Whether to request an OnaData CSV Export without the column group names included in the header
-    do_not_split_select_multiples :: bool : Whether to request an OnaData CSV Export that doesn't splict select multiples into different columns
-    include_reviews :: bool : Whether to request an OnaData CSV Export that includes review
-    include_images :: bool : Whether to request an OnaData CSV Export that includes image URLs
-    include_labels_only :: bool : Whether to request an OnaData CSV Export that includes labels only
     """
     db = SessionLocal()
     redis_client = Redis(
@@ -216,22 +202,11 @@ def start_csv_import_to_hyper(
                 db.refresh(hyperfile)
 
                 try:
-                    export_configuration = {
-                        "include_labels": str(include_labels).lower(),
-                        "remove_group_name": str(remove_group_name).lower(),
-                        "do_not_split_select_multiples": str(
-                            do_not_split_select_multiples
-                        ).lower(),
-                        "include_reviews": str(include_reviews).lower(),
-                        "include_images": str(include_images).lower(),
-                        "include_labels_only": str(include_labels_only).lower(),
-                    }
                     export = get_csv_export(
                         hyperfile,
                         user,
                         server,
                         db,
-                        export_configuration=export_configuration,
                     )
 
                     if export:

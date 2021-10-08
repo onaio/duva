@@ -45,6 +45,7 @@ class TestConfiguration(TestBase):
             token_name="test",
             project_name="default",
             id=config_id,
+            export_settings=schemas.ExportConfigurationSettings(),
         ).dict()
         assert response.json() == expected_data
 
@@ -88,6 +89,7 @@ class TestConfiguration(TestBase):
             token_name="test",
             project_name="default",
             id=config_id,
+            export_settings=schemas.ExportConfigurationSettings(),
         ).dict()
 
         # Able to patch Tableau Configuration

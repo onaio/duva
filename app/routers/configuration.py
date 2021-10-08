@@ -77,14 +77,7 @@ def create_configuration(
     Create a new Tableau Server Configuration that can be attached
     to a hyper file to define where the hyper file should be pushed to.
     """
-    config_data = schemas.ConfigurationCreate(
-        user=user.id,
-        server_address=config_data.server_address,
-        site_name=config_data.site_name,
-        token_name=config_data.token_name,
-        token_value=config_data.token_value,
-        project_name=config_data.project_name,
-    )
+    config_data = schemas.ConfigurationCreate(user=user.id, **config_data.dict())
     try:
         config = Configuration.create(db, config_data)
         return config

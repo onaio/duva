@@ -1,4 +1,5 @@
 import sqlalchemy.types as types
+import json
 from typing import Optional
 from cryptography.fernet import Fernet
 from sqlalchemy import (
@@ -219,6 +220,20 @@ class Configuration(ModelMixin, EncryptionMixin, Base):
     token_value = Column(String)
     project_name = Column(String, default="default")
     user = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    export_settings = Column(
+        JSON,
+        nullable=False,
+        server_default=json.dumps(
+            {
+                "include_labels": True,
+                "remove_group_name": True,
+                "do_not_split_select_multiple": False,
+                "include_reviews": False,
+                "include_labels_only": True,
+                "value_select_multiples": True,
+            }
+        ),
+    )
 
     @classmethod
     def filter_using_user_id(cls, db: Session, user_id: int):

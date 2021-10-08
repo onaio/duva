@@ -65,12 +65,22 @@ class FileCreate(FileBase):
     meta_data: dict = {SYNC_FAILURES_METADATA: 0, JOB_ID_METADATA: ""}
 
 
+class ExportConfigurationSettings(BaseModel):
+    include_labels: Optional[bool] = True
+    remove_group_name: Optional[bool] = True
+    do_not_split_select_multiple: Optional[bool] = False
+    include_reviews: Optional[bool] = False
+    include_labels_only: Optional[bool] = True
+    value_select_multiples: Optional[bool] = True
+
+
 class ConfigurationResponse(BaseModel):
     id: int
     server_address: str
     site_name: str
     token_name: str
     project_name: str
+    export_settings: ExportConfigurationSettings
 
     class Config:
         orm_mode = True
@@ -82,6 +92,7 @@ class ConfigurationListResponse(BaseModel):
     site_name: str
     token_name: str
     project_name: str
+    export_settings: ExportConfigurationSettings
 
     class Config:
         orm_mode = True
@@ -93,6 +104,9 @@ class ConfigurationCreateRequest(BaseModel):
     token_name: str
     project_name: str
     token_value: str
+    export_settings: Optional[
+        ExportConfigurationSettings
+    ] = ExportConfigurationSettings()
 
 
 class ConfigurationPatchRequest(BaseModel):
@@ -100,6 +114,8 @@ class ConfigurationPatchRequest(BaseModel):
     site_name: Optional[str]
     token_name: Optional[str]
     project_name: Optional[str]
+    token_value: Optional[str]
+    export_settings: Optional[ExportConfigurationSettings]
 
 
 class ConfigurationCreate(ConfigurationCreateRequest):
