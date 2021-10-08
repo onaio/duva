@@ -4,15 +4,18 @@ import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from fastapi_cache import caches, close_caches
 from fastapi_cache.backends.redis import CACHE_KEY, RedisCacheBackend
 from tableauhyperapi import HyperProcess, Telemetry
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette_exporter import PrometheusMiddleware, handle_metrics
+from redis import Redis
 
 from app.common_tags import HYPER_PROCESS_CACHE_KEY
-from app.database import engine
-from app.models import Base
+from app.database import engine, SessionLocal
+from app.models import Base, HyperFile
 from app.settings import settings
 from app.utils.onadata_utils import schedule_all_active_forms
 from app.routers.file import router as file_router
@@ -46,11 +49,15 @@ app.add_middleware(
     allow_headers=settings.cors_allowed_headers,
     max_age=settings.cors_max_age,
 )
+app.add_middleware(
+    PrometheusMiddleware, app_name="duva", prefix="duva", filter_unhandled_paths=True
+)
 if settings.sentry_dsn:
     sentry_sdk.init(dsn=settings.sentry_dsn, release=settings.app_version)
     app.add_middleware(SentryAsgiMiddleware)
 
 # Include routes
+app.add_route("/metrics", handle_metrics)
 app.include_router(server_router, tags=["Server Configuration"])
 app.include_router(oauth_router, tags=["OAuth2"])
 app.include_router(file_router, tags=["Hyper File"])
@@ -65,6 +72,36 @@ def home(request: Request):
         "app_version": settings.app_version,
         "docs_url": str(request.base_url.replace(path=app.docs_url)),
     }
+
+
+@app.get("/health", tags=["Application"])
+def service_health(request: Request):
+    db = SessionLocal()
+    database_reachable = True
+    cache_reachable = True
+
+    try:
+        HyperFile.get_active_files(db)
+    except Exception:
+        database_reachable = False
+
+    db.close()
+
+    redis_client = Redis(
+        host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
+    )
+    try:
+        redis_client.ping()
+    except Exception:
+        cache_reachable = False
+
+    return JSONResponse(
+        {
+            "Database": "OK" if database_reachable else "FAILING",
+            "Cache": "OK" if cache_reachable else "FAILING",
+        },
+        200 if (database_reachable and cache_reachable) else 500,
+    )
 
 
 @app.on_event("startup")
