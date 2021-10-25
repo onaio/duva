@@ -12,6 +12,13 @@ This project has been funded by DG ECHO and implemented by Caritas Switzerland a
 
 All release notes for this project will be documented in this file; this project follows [Semantic Versioning](https://semver.org/).
 
+## v0.0.6 - 2021-10-25
+
+### Bug fixes and improvements :bug:
+
+- Add Health endpoint and export metrics using `starlette_exporter`. PR [#23](https://github.com/onaio/pull/23)
+- Allow export settings to be configured via the API. PR [#24](https://github.com/onaio/pull/24)
+
 ## v0.0.5 - 2021-07-05
 
 ### Bug fixes and improvements :bug:
