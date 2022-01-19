@@ -103,11 +103,10 @@ class TestOnadataUtils(TestBase):
             )
             assert ret == Path(file_mock.name)
             mock_get_access_token.assert_called_with(user, server, self.db)
-            expected_query_params = "&".join(
-                [
-                    f"{param}={value}"
-                    for param, value in configuration.export_settings.items()
-                ]
+            expected_query_params = (
+                "include_labels=True&remove_group_name=True&do_not_split_select_multiple=False"
+                "&include_reviews=False&include_labels_only=True&value_select_multiples=True&"
+                "show_choice_labels=True&binary_select_multiples=True"
             )
             mock_get_csv_export.assert_called_with(
                 f"{server.url}/api/v1/forms/{hyperfile.form_id}/export_async.json?format=csv&{expected_query_params}",

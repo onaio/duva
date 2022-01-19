@@ -159,7 +159,10 @@ def get_csv_export(
         if resp.status_code == 200:
             url = f"{form_url}/export_async.json?format=csv"
             if hyperfile.configuration:
-                export_settings = hyperfile.configuration.export_settings
+                export_settings = schemas.ExportConfigurationSettings(
+                    **hyperfile.configuration.export_settings
+                ).dict()
+
                 for key, value in export_settings.items():
                     url += f"&{key}={value}"
 

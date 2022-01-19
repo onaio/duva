@@ -72,6 +72,8 @@ class ExportConfigurationSettings(BaseModel):
     include_reviews: Optional[bool] = False
     include_labels_only: Optional[bool] = True
     value_select_multiples: Optional[bool] = True
+    show_choice_labels: Optional[bool] = True
+    binary_select_multiples: Optional[bool] = True
 
 
 class ConfigurationResponse(BaseModel):
