@@ -12,6 +12,12 @@ This project has been funded by DG ECHO and implemented by Caritas Switzerland a
 
 All release notes for this project will be documented in this file; this project follows [Semantic Versioning](https://semver.org/).
 
+## v0.0.7 - 2022-01-20
+
+### Bug fixes and improvements :bug:
+
+- Add additional export configurations. PR [#27](https://github.com/onaio/duva/pull/27)
+
 ## v0.0.6 - 2021-10-25
 
 ### Bug fixes and improvements :bug:
