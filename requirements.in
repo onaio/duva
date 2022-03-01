@@ -8,6 +8,7 @@ python-dateutil
 pandas
 boto3
 tableauserverclient
+tableauhyperapi==0.0.14265
 sqlalchemy
 cryptography
 rq
