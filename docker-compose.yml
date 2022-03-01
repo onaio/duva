@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: hypermind:latest
+    image: duva:latest
     stdin_open: true
     tty: true
     volumes:
@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: hypermind:latest
+    image: duva:latest
     command: "bash init_scheduler.sh"
     volumes:
       # For local development
@@ -61,7 +61,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: hypermind:latest
+    image: duva:latest
     command: "rq worker -c app.jobs.settings"
     volumes:
       # For local development
