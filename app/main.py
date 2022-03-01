@@ -129,8 +129,8 @@ async def on_startup() -> None:
 
 
 @app.on_event("shutdown")
-async def on_shutdown() -> None:
-    await close_caches()
+def on_shutdown() -> None:
+   close_caches()
 
     # Check if hyper process is running and shut it down
     process: HyperProcess = caches.get(HYPER_PROCESS_CACHE_KEY)
