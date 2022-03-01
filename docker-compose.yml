@@ -3,8 +3,6 @@ version: "3"
 services:
   cache:
     image: redis:6-alpine
-    ports:
-      - 6379:6379
   db:
     image: postgres:13
     volumes:

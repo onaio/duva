@@ -1,6 +1,7 @@
 # Routes for the Tableau Configuration (/configurations) endpoint
 from typing import List
 
+import sentry_sdk
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
@@ -13,6 +14,7 @@ from app import schemas
 from app.models import Configuration, User
 from app.utils.auth_utils import IsAuthenticatedUser
 from app.utils.utils import get_db
+from app.libs.tableau.client import TableauClient, InvalidConfiguration
 
 
 router = APIRouter()
@@ -79,10 +81,15 @@ def create_configuration(
     """
     config_data = schemas.ConfigurationCreate(user=user.id, **config_data.dict())
     try:
+        TableauClient.validate_configuration(config_data)
         config = Configuration.create(db, config_data)
         return config
     except (UniqueViolation, IntegrityError):
         raise HTTPException(status_code=400, detail="Configuration already exists")
+    except InvalidConfiguration as e:
+        raise HTTPException(
+            status_code=400, detail=f"Failed to create configuration: {e}"
+        )
 
 
 @router.patch(
@@ -108,11 +115,16 @@ def patch_configuration(
                     if key == "token_value":
                         value = Configuration.encrypt_value(value)
                     setattr(config, key, value)
+            TableauClient.validate_configuration(config)
             db.commit()
             db.refresh(config)
             return config
         except (UniqueViolation, IntegrityError):
             raise HTTPException(status_code=400, detail="Configuration already exists")
+        except InvalidConfiguration as e:
+            raise HTTPException(
+                status_code=400, detail=f"Failed to create configuration: {e}"
+            )
     else:
         raise HTTPException(404, detail="Tableau Configuration not found.")
 

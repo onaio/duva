@@ -191,15 +191,14 @@ def start_csv_import_to_hyper(
         host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
     )
     hyperfile: HyperFile = HyperFile.get(db, object_id=hyperfile_id)
-    job_status: str = schemas.FileStatusEnum.file_available.value
-    err: Exception = None
+    user = User.get(db, hyperfile.user)
+    job_status = schemas.FileStatusEnum.latest_sync_failed.value
+    err = None
 
-    if hyperfile:
+    if hyperfile and user and user.server:
         try:
             with redis_client.lock(f"{HYPERFILE_SYNC_LOCK_PREFIX}{hyperfile.id}"):
-                user = User.get(db, hyperfile.user)
                 server = user.server
-
                 hyperfile.file_status = schemas.FileStatusEnum.syncing.value
                 db.commit()
                 db.refresh(hyperfile)
@@ -214,6 +213,7 @@ def start_csv_import_to_hyper(
 
                     if export:
                         handle_csv_import_to_hyperfile(hyperfile, export, process, db)
+                        job_status = schemas.FileStatusEnum.file_available.value
 
                         if schedule_cron and not hyperfile.meta_data.get(
                             JOB_ID_METADATA
@@ -224,27 +224,31 @@ def start_csv_import_to_hyper(
                     else:
                         job_status = schemas.FileStatusEnum.file_unavailable.value
                 except (CSVExportFailure, ConnectionRequestError, Exception) as exc:
-                    err = exc
+                    err = str(exc)
                     job_status = schemas.FileStatusEnum.latest_sync_failed.value
 
-                successful_import = (
-                    job_status == schemas.FileStatusEnum.file_available.value
-                )
-                handle_hyper_file_job_completion(
-                    hyperfile.id,
-                    db,
-                    job_succeeded=successful_import,
-                    object_updated=successful_import,
-                    file_status=job_status,
-                )
-                db.close()
-                if err:
-                    FAILED_IMPORTS.inc()
-                    sentry_sdk.capture_exception(err)
+            successful_import = (
+                job_status == schemas.FileStatusEnum.file_available.value
+            )
+            if successful_import:
                 SUCCESSFUL_IMPORTS.inc()
-                return successful_import
+            else:
+                FAILED_IMPORTS.inc()
+
+            handle_hyper_file_job_completion(
+                hyperfile.id,
+                db,
+                job_succeeded=successful_import,
+                object_updated=successful_import,
+                file_status=job_status,
+                failure_reason=err,
+            )
+            db.close()
+            return successful_import
         except LockError:
             pass
+    else:
+        err = "Missing user or user server information"
 
 
 def start_csv_import_to_hyper_job(hyperfile_id: int, schedule_cron: bool = False):

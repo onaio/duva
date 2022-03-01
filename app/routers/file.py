@@ -17,6 +17,7 @@ from tableauhyperapi.hyperprocess import HyperProcess
 from app import schemas
 from app.common_tags import HYPER_PROCESS_CACHE_KEY
 from app.libs.s3.client import S3Client
+from app.libs.tableau.client import TableauClient, InvalidConfiguration
 from app.models import HyperFile, Configuration, User
 from app.settings import settings
 from app.utils.auth_utils import IsAuthenticatedUser
@@ -291,6 +292,16 @@ def trigger_hyper_file_sync(
 
     if not hyper_file:
         raise HTTPException(404, "File not found.")
+
+    if hyper_file.configuration:
+        try:
+            TableauClient.validate_configuration(hyper_file.configuration)
+        except InvalidConfiguration as e:
+            raise HTTPException(
+                400,
+                detail=f"Invalid configuration ID {hyper_file.configuration.id}: {e}",
+            )
+
     if hyper_file.user == user.id:
         status_code = 200
         if hyper_file.file_status not in [
