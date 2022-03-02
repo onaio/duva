@@ -158,6 +158,9 @@ def list_hyper_files(
                 form_id=hyperfile.form_id,
                 filename=hyperfile.filename,
                 file_status=hyperfile.file_status,
+                last_updated=hyperfile.last_updated,
+                last_synced=hyperfile.last_synced,
+                meta_data=hyperfile.meta_data,
             )
         )
     return response
