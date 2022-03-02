@@ -246,8 +246,6 @@ def start_csv_import_to_hyper(
             return successful_import
         except LockError:
             pass
-    else:
-        err = "Missing user or user server information"
 
 
 def start_csv_import_to_hyper_job(hyperfile_id: int, schedule_cron: bool = False):

@@ -86,9 +86,7 @@ def create_configuration(
     except (UniqueViolation, IntegrityError):
         raise HTTPException(status_code=400, detail="Configuration already exists")
     except InvalidConfiguration as e:
-        raise HTTPException(
-            status_code=400, detail=f"Failed to create configuration: {e}"
-        )
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.patch(
@@ -121,9 +119,7 @@ def patch_configuration(
         except (UniqueViolation, IntegrityError):
             raise HTTPException(status_code=400, detail="Configuration already exists")
         except InvalidConfiguration as e:
-            raise HTTPException(
-                status_code=400, detail=f"Failed to create configuration: {e}"
-            )
+            raise HTTPException(status_code=400, detail=str(e))
     else:
         raise HTTPException(404, detail="Tableau Configuration not found.")
 
