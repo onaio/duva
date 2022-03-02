@@ -235,6 +235,7 @@ def handle_hyper_file_job_completion(
         if object_updated:
             hf.last_updated = datetime.now()
         metadata[job_failure_counter_meta_tag] = 0
+        metadata.pop(FAILURE_REASON_METADATA, None)
     else:
         failure_count = metadata.get(job_failure_counter_meta_tag)
         if isinstance(failure_count, int):
