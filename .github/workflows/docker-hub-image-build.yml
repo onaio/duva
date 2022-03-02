@@ -26,7 +26,7 @@ jobs:
 
       - name: Get the version
         id: get_version
-        if: github.event_name == 'push'
+        if: github.event.inputs.versionTag == ''
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - name: Login to DockerHub
