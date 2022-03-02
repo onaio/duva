@@ -1,10 +1,15 @@
+from unittest.mock import patch
+
 from app.models import Configuration
 from app import schemas
 from app.tests.test_base import TestBase
 
 
 class TestConfiguration(TestBase):
-    def _create_configuration(self, auth_credentials: dict, config_data: dict = None):
+    @patch("app.routers.configuration.TableauClient")
+    def _create_configuration(
+        self, auth_credentials: dict, mock_client, config_data: dict = None
+    ):
         config_data = (
             config_data
             or schemas.ConfigurationCreateRequest(
@@ -15,6 +20,7 @@ class TestConfiguration(TestBase):
                 project_name="default",
             ).dict()
         )
+        mock_client.validate_configuration.return_value = True
         response = self.client.post(
             "/api/v1/configurations", json=config_data, headers=auth_credentials
         )
@@ -72,7 +78,8 @@ class TestConfiguration(TestBase):
         assert response.status_code == 204
         assert len(Configuration.get_all(self.db)) == current_count - 1
 
-    def test_patch_config(self, create_user_and_login):
+    @patch("app.routers.configuration.TableauClient")
+    def test_patch_config(self, mock_client, create_user_and_login):
         _, jwt = create_user_and_login
         jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
@@ -91,6 +98,7 @@ class TestConfiguration(TestBase):
             id=config_id,
             export_settings=schemas.ExportConfigurationSettings(),
         ).dict()
+        mock_client.validate_configuration.return_value = True
 
         # Able to patch Tableau Configuration
         response = self.client.patch(

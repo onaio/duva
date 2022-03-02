@@ -181,7 +181,7 @@ starlette==0.13.6
     #   starlette-exporter
 starlette-exporter==0.9.0
     # via -r requirements.in
-tableauhyperapi==0.0.11556
+tableauhyperapi==0.0.14265
     # via -r requirements.in
 tableauserverclient==0.13
     # via -r requirements.in

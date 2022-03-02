@@ -4,6 +4,12 @@ on:
   release:
       types:
           - "released"
+  workflow_dispatch:
+      inputs:
+          versionTag:
+              description: "Version Tag"
+              required: true
+              default: ''
 
 jobs:
   main:
@@ -20,6 +26,7 @@ jobs:
 
       - name: Get the version
         id: get_version
+        if: github.event_name == 'push'
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - name: Login to DockerHub
@@ -36,13 +43,13 @@ jobs:
           file: ./Dockerfile.prod
           platforms: linux/amd64
           build-args: |
-            release_version=${{ steps.get_version.outputs.VERSION }}
+            release_version=${{ github.event.inputs.versionTag || steps.get_version.outputs.VERSION }}
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           tags: |
             onaio/duva:latest
-            onaio/duva:${{ steps.get_version.outputs.VERSION }}
+            onaio/duva:${{ github.event.inputs.versionTag || steps.get_version.outputs.VERSION }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

@@ -5,6 +5,10 @@ from pathlib import Path
 from app.models import Configuration
 
 
+class InvalidConfiguration(Exception):
+    pass
+
+
 class TableauClient:
     def __init__(self, configuration: Configuration):
         self.project_name = configuration.project_name
@@ -12,6 +16,25 @@ class TableauClient:
         self.token_value = Configuration.decrypt_value(configuration.token_value)
         self.site_name = configuration.site_name
         self.server_address = configuration.server_address
+
+    @staticmethod
+    def validate_configuration(configuration):
+        if isinstance(configuration, Configuration):
+            access_token = Configuration.decrypt_value(configuration.token_value)
+        else:
+            access_token = configuration.token_value
+
+        tableau_auth = TSC.PersonalAccessTokenAuth(
+            token_name=configuration.token_name,
+            personal_access_token=access_token,
+            site_id=configuration.site_name,
+        )
+        try:
+            server = TSC.Server(configuration.server_address, use_server_version=True)
+            server.auth.sign_in(tableau_auth)
+            server.auth.sign_out()
+        except Exception as e:
+            raise InvalidConfiguration(f"Failed to validate configuration: {e}")
 
     def publish_hyper(self, hyper_name):
         """

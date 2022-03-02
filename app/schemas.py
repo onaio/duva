@@ -56,6 +56,9 @@ class FileListItem(BaseModel):
     form_id: int
     filename: str
     file_status: FileStatusEnum = FileStatusEnum.file_unavailable.value
+    last_updated: Optional[datetime] = None
+    last_synced: Optional[datetime] = None
+    meta_data: Optional[dict] = None
 
 
 class FileCreate(FileBase):
@@ -151,6 +154,7 @@ class FileResponseBody(FileBase):
     download_url: Optional[str]
     download_url_valid_till: Optional[str]
     configuration_url: Optional[str]
+    meta_data: Optional[dict] = None
 
     class Config:
         orm_mode = True

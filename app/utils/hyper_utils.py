@@ -24,7 +24,11 @@ from tableauhyperapi import (
 from app.database import SessionLocal
 from app.schemas import FileStatusEnum
 from app.settings import settings
-from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
+from app.common_tags import (
+    JOB_ID_METADATA,
+    SYNC_FAILURES_METADATA,
+    FAILURE_REASON_METADATA,
+)
 from app.jobs.scheduler import schedule_cron_job, cancel_job
 from app.libs.s3.client import S3Client
 from app.libs.tableau.client import TableauClient
@@ -153,6 +157,7 @@ def handle_csv_import(
 
         if configuration:
             tableau_client = TableauClient(configuration=configuration)
+            tableau_client.validate_configuration(configuration)
             tableau_client.publish_hyper(file_path)
 
         return import_count
@@ -216,6 +221,7 @@ def handle_hyper_file_job_completion(
     file_status: str = FileStatusEnum.file_available.value,
     job_id_meta_tag: str = JOB_ID_METADATA,
     job_failure_counter_meta_tag: str = SYNC_FAILURES_METADATA,
+    failure_reason: str = None,
 ):
     """
     Handles updating a HyperFile according to the outcome of a running Job; Updates
@@ -228,12 +234,16 @@ def handle_hyper_file_job_completion(
         if object_updated:
             hf.last_updated = datetime.now()
         metadata[job_failure_counter_meta_tag] = 0
+        metadata.pop(FAILURE_REASON_METADATA, None)
     else:
         failure_count = metadata.get(job_failure_counter_meta_tag)
         if isinstance(failure_count, int):
             metadata[job_failure_counter_meta_tag] = failure_count + 1
         else:
             metadata[job_failure_counter_meta_tag] = failure_count = 0
+
+        if failure_reason:
+            metadata[FAILURE_REASON_METADATA] = failure_reason
 
         if failure_count >= settings.job_failure_limit and hf.is_active:
             cancel_hyper_file_job(

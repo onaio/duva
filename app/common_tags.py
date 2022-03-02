@@ -10,3 +10,4 @@ ONADATA_USER_ENDPOINT = "/api/v1/user"
 
 SYNC_FAILURES_METADATA = "sync-failures"
 JOB_ID_METADATA = "job-id"
+FAILURE_REASON_METADATA = "failure-reason"
