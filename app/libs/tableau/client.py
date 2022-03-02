@@ -20,8 +20,7 @@ class TableauClient:
     @staticmethod
     def validate_configuration(configuration):
         if isinstance(configuration, Configuration):
-            access_token = Configuration.decrypt_value(
-                configuration.token_value)
+            access_token = Configuration.decrypt_value(configuration.token_value)
         else:
             access_token = configuration.token_value
 

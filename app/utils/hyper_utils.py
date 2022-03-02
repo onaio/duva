@@ -25,14 +25,13 @@ from app.database import SessionLocal
 from app.schemas import FileStatusEnum
 from app.settings import settings
 from app.common_tags import (
-    FAILURE_REASON_METADATA,
     JOB_ID_METADATA,
     SYNC_FAILURES_METADATA,
     FAILURE_REASON_METADATA,
 )
 from app.jobs.scheduler import schedule_cron_job, cancel_job
 from app.libs.s3.client import S3Client
-from app.libs.tableau.client import TableauClient, InvalidConfiguration
+from app.libs.tableau.client import TableauClient
 from app.models import HyperFile, Configuration
 
 

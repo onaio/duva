@@ -5,7 +5,6 @@ from tempfile import NamedTemporaryFile
 from typing import Optional
 
 import httpx
-import sentry_sdk
 from redis import Redis
 from redis.exceptions import LockError
 from fastapi_cache import caches

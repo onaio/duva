@@ -6,9 +6,10 @@ from app.tests.test_base import TestBase
 
 
 class TestConfiguration(TestBase):
-
     @patch("app.routers.configuration.TableauClient")
-    def _create_configuration(self, auth_credentials: dict, mock_client, config_data: dict = None):
+    def _create_configuration(
+        self, auth_credentials: dict, mock_client, config_data: dict = None
+    ):
         config_data = (
             config_data
             or schemas.ConfigurationCreateRequest(

@@ -1,7 +1,6 @@
 # Routes for the Tableau Configuration (/configurations) endpoint
 from typing import List
 
-import sentry_sdk
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
