@@ -224,6 +224,7 @@ class TestFileRoute(TestBase):
             "last_synced": None,
             "last_updated": None,
             "configuration_url": f"http://testserver/api/v1/configurations/{config.id}",
+            "meta_data": {"job-id": "", "sync-failures": 0},
         }
 
         assert response.status_code == 201
@@ -273,6 +274,9 @@ class TestFileRoute(TestBase):
             id=hyperfile.id,
             form_id=hyperfile.form_id,
             filename=hyperfile.filename,
+            last_updated=hyperfile.last_updated,
+            last_synced=hyperfile.last_synced,
+            meta_data=hyperfile.meta_data,
         ).dict()
         expected_data.update({"file_status": schemas.FileStatusEnum.queued.value})
         assert response.json()[0] == expected_data
@@ -343,6 +347,7 @@ class TestFileRoute(TestBase):
             "download_url",
             "download_url_valid_till",
             "configuration_url",
+            "meta_data",
         ]
         assert response.status_code == 200
         assert list(response.json().keys()) == expected_keys
