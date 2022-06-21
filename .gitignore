@@ -9,3 +9,4 @@ MANIFEST
 .pytest_cache/
 .coverage
 *.egg-info
+.eggs
