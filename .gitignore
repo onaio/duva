@@ -8,3 +8,5 @@ MANIFEST
 .tox/
 .pytest_cache/
 .coverage
+*.egg-info
+.eggs

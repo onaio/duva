@@ -1,12 +1,7 @@
-from distutils.core import setup
+"""
+Setup file for Duva
+"""
+import setuptools
 
-
-setup(
-    name="Duva",
-    version="0.0.5",
-    description="",
-    author="Ona Kenya",
-    license="Apache 2.0",
-    author_email="tech@ona.io",
-    url="https://github.com/onaio/hypermind",
-)
+if __name__ == "__main__":
+    setuptools.setup()
