@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     app_version: str = "v0.0.8"
     app_host: str = "127.0.0.1"
     app_port: int = 8000
-    database_url: str = "postgres://duva:duva@127.0.0.1/duva"
+    database_url: str = "postgresql://duva:duva@127.0.0.1/duva"
     debug: bool = True
     sentry_dsn: str = ""
     session_same_site: str = "none"
