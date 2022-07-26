@@ -103,6 +103,8 @@ python-dotenv==0.20.0
     # via uvicorn
 python-editor==1.0.4
     # via alembic
+python-multipart==0.0.5
+    # via Duva (setup.cfg)
 pytz==2020.4
     # via pandas
 pyxform==1.2.0
@@ -134,6 +136,7 @@ six==1.15.0
     #   cryptography
     #   formencode
     #   python-dateutil
+    #   python-multipart
     #   unittest2
 sniffio==1.2.0
     # via

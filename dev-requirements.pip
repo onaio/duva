@@ -192,6 +192,8 @@ python-dateutil==2.8.2
     #   rq-scheduler
 python-dotenv==0.20.0
     # via uvicorn
+python-multipart==0.0.5
+    # via Duva (setup.cfg)
 pytz==2022.1
     # via pandas
 pyxform==1.10.0
@@ -227,6 +229,7 @@ six==1.15.0
     # via
     #   fakeredis
     #   python-dateutil
+    #   python-multipart
     #   tox
     #   virtualenv
 sniffio==1.2.0
