@@ -3,7 +3,6 @@ import uvicorn
 import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from fastapi_cache import caches, close_caches
 from fastapi_cache.backends.redis import CACHE_KEY, RedisCacheBackend
@@ -31,8 +30,6 @@ app = FastAPI(
     description=settings.app_description,
     version=settings.app_version,
 )
-
-templates = Jinja2Templates(directory="app/templates")
 
 # Include middlewares
 app.add_middleware(
