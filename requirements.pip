@@ -64,6 +64,8 @@ idna==2.10
     #   anyio
     #   requests
     #   rfc3986
+itsdangerous==2.1.2
+    # via Duva (setup.cfg)
 jmespath==0.10.0
     # via
     #   boto3
@@ -112,7 +114,9 @@ redis==3.5.3
     #   Duva (setup.cfg)
     #   rq
 requests==2.24.0
-    # via tableauserverclient
+    # via
+    #   Duva (setup.cfg)
+    #   tableauserverclient
 rfc3986[idna2008]==1.4.0
     # via httpx
 rq==1.6.1
