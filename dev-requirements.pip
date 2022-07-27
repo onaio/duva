@@ -6,30 +6,28 @@
 #
 aioredis==1.3.1
     # via fastapi-cache
-alembic==1.8.0
+alembic==1.8.1
     # via Duva (setup.cfg)
 anyio==3.6.1
     # via
     #   httpcore
     #   starlette
-    #   watchgod
-appdirs==1.4.4
-    # via
-    #   black
-    #   virtualenv
-asgiref==3.5.2
-    # via uvicorn
+    #   watchfiles
+asttokens==2.0.5
+    # via stack-data
 async-timeout==4.0.2
-    # via aioredis
-attrs==20.3.0
+    # via
+    #   aioredis
+    #   redis
+attrs==21.4.0
     # via pytest
 backcall==0.2.0
     # via ipython
-black==20.8b1
+black==22.6.0
     # via Duva (setup.cfg)
-boto3==1.24.13
+boto3==1.24.38
     # via Duva (setup.cfg)
-botocore==1.27.13
+botocore==1.27.38
     # via
     #   boto3
     #   s3transfer
@@ -39,46 +37,52 @@ certifi==2022.6.15
     #   httpx
     #   requests
     #   sentry-sdk
-cffi==1.15.0
+cffi==1.15.1
     # via
     #   cryptography
     #   tableauhyperapi
-cfgv==3.2.0
+cfgv==3.3.1
     # via pre-commit
-charset-normalizer==2.0.12
+charset-normalizer==2.1.0
     # via requests
-click==7.1.2
+click==8.1.3
     # via
     #   black
     #   rq
     #   uvicorn
-coverage==5.4
+coverage[toml]==6.4.2
     # via pytest-cov
 croniter==1.3.5
     # via rq-scheduler
-cryptography==37.0.2
+cryptography==37.0.4
     # via Duva (setup.cfg)
-decorator==4.4.2
-    # via ipython
+decorator==5.1.1
+    # via
+    #   ipdb
+    #   ipython
 defusedxml==0.7.1
     # via
     #   pyxform
     #   tableauserverclient
-distlib==0.3.1
+deprecated==1.2.13
+    # via redis
+distlib==0.3.5
     # via virtualenv
 et-xmlfile==1.1.0
     # via openpyxl
-fakeredis==1.4.5
+executing==0.9.1
+    # via stack-data
+fakeredis==1.8.2
     # via Duva (setup.cfg)
-fastapi==0.78.0
+fastapi==0.79.0
     # via Duva (setup.cfg)
 fastapi-cache==0.1.0
     # via Duva (setup.cfg)
-filelock==3.0.12
+filelock==3.7.1
     # via
     #   tox
     #   virtualenv
-flake8==3.8.4
+flake8==4.0.1
     # via Duva (setup.cfg)
 greenlet==1.1.2
     # via sqlalchemy
@@ -94,7 +98,7 @@ httptools==0.4.0
     # via uvicorn
 httpx==0.23.0
     # via Duva (setup.cfg)
-identify==1.5.9
+identify==2.5.2
     # via pre-commit
 idna==3.3
     # via
@@ -103,85 +107,92 @@ idna==3.3
     #   rfc3986
 iniconfig==1.1.1
     # via pytest
-ipdb==0.13.4
+ipdb==0.13.9
     # via Duva (setup.cfg)
-ipython==7.18.1
+ipython==8.4.0
     # via ipdb
-ipython-genutils==0.2.0
-    # via traitlets
 itsdangerous==2.1.2
     # via Duva (setup.cfg)
-jedi==0.17.2
+jedi==0.18.1
     # via ipython
 jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-mako==1.2.0
+mako==1.2.1
     # via alembic
 markupsafe==2.1.1
     # via mako
+matplotlib-inline==0.1.3
+    # via ipython
 mccabe==0.6.1
     # via flake8
 mypy-extensions==0.4.3
     # via black
-nodeenv==1.5.0
+nodeenv==1.7.0
     # via pre-commit
-numpy==1.22.4
+numpy==1.23.1
     # via pandas
 openpyxl==3.0.9
     # via pyxform
-packaging==20.7
+packaging==21.3
     # via
     #   pytest
+    #   redis
     #   tox
-pandas==1.4.2
+pandas==1.4.3
     # via Duva (setup.cfg)
-parso==0.7.1
+parso==0.8.3
     # via jedi
-pathspec==0.8.1
+pathspec==0.9.0
     # via black
 pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pluggy==0.13.1
+platformdirs==2.5.2
+    # via
+    #   black
+    #   virtualenv
+pluggy==1.0.0
     # via
     #   pytest
     #   tox
-pre-commit==2.8.2
+pre-commit==2.20.0
     # via Duva (setup.cfg)
 prometheus-client==0.14.1
     # via starlette-exporter
-prompt-toolkit==3.0.8
+prompt-toolkit==3.0.30
     # via ipython
 psycopg2-binary==2.9.3
     # via Duva (setup.cfg)
-ptyprocess==0.6.0
+ptyprocess==0.7.0
     # via pexpect
-py==1.9.0
+pure-eval==0.2.2
+    # via stack-data
+py==1.11.0
     # via
     #   pytest
     #   tox
-pycodestyle==2.6.0
+pycodestyle==2.8.0
     # via flake8
 pycparser==2.21
     # via cffi
 pydantic==1.9.1
     # via fastapi
-pyflakes==2.2.0
+pyflakes==2.4.0
     # via flake8
-pygments==2.7.2
+pygments==2.12.0
     # via ipython
 pyjwt==2.4.0
     # via Duva (setup.cfg)
-pyparsing==2.4.7
+pyparsing==3.0.9
     # via packaging
-pytest==6.1.2
+pytest==7.1.2
     # via
     #   Duva (setup.cfg)
     #   pytest-cov
-pytest-cov==2.11.1
+pytest-cov==3.0.0
     # via Duva (setup.cfg)
 python-dateutil==2.8.2
     # via
@@ -196,20 +207,18 @@ python-multipart==0.0.5
     # via Duva (setup.cfg)
 pytz==2022.1
     # via pandas
-pyxform==1.10.0
+pyxform==1.10.1
     # via Duva (setup.cfg)
-pyyaml==5.3.1
+pyyaml==6.0
     # via
     #   pre-commit
     #   uvicorn
-redis==3.5.3
+redis==4.3.4
     # via
     #   Duva (setup.cfg)
     #   fakeredis
     #   rq
-regex==2020.10.28
-    # via black
-requests==2.28.0
+requests==2.28.1
     # via
     #   Duva (setup.cfg)
     #   tableauserverclient
@@ -223,72 +232,79 @@ rq-scheduler==0.11.0
     # via Duva (setup.cfg)
 s3transfer==0.6.0
     # via boto3
-sentry-sdk==1.5.12
+sentry-sdk==1.8.0
     # via Duva (setup.cfg)
-six==1.15.0
+six==1.16.0
     # via
     #   fakeredis
     #   python-dateutil
     #   python-multipart
     #   tox
-    #   virtualenv
 sniffio==1.2.0
     # via
     #   anyio
     #   httpcore
     #   httpx
-sortedcontainers==2.3.0
+sortedcontainers==2.4.0
     # via fakeredis
-sqlalchemy==1.4.37
+sqlalchemy==1.4.39
     # via
     #   Duva (setup.cfg)
     #   alembic
+stack-data==0.3.0
+    # via ipython
 starlette==0.19.1
     # via
     #   fastapi
     #   starlette-exporter
 starlette-exporter==0.13.0
     # via Duva (setup.cfg)
-tableauhyperapi==0.0.14946
+tableauhyperapi==0.0.15145
     # via Duva (setup.cfg)
 tableauserverclient==0.19.0
     # via Duva (setup.cfg)
 toml==0.10.2
     # via
-    #   black
+    #   ipdb
     #   pre-commit
-    #   pytest
     #   tox
-tox==3.20.1
+tomli==2.0.1
+    # via
+    #   black
+    #   coverage
+    #   pytest
+tox==3.25.1
     # via Duva (setup.cfg)
-traitlets==5.0.5
-    # via ipython
-typed-ast==1.4.1
-    # via black
-typing-extensions==4.2.0
+traitlets==5.3.0
+    # via
+    #   ipython
+    #   matplotlib-inline
+typing-extensions==4.3.0
     # via
     #   black
     #   pydantic
     #   starlette
-urllib3==1.26.9
+urllib3==1.26.11
     # via
     #   botocore
     #   requests
     #   sentry-sdk
-uvicorn[standard]==0.17.6
+uvicorn[standard]==0.18.2
     # via Duva (setup.cfg)
 uvloop==0.16.0
     # via uvicorn
-virtualenv==20.1.0
+virtualenv==20.16.1
     # via
     #   pre-commit
     #   tox
-watchgod==0.8.2
+watchfiles==0.16.1
     # via uvicorn
 wcwidth==0.2.5
     # via prompt-toolkit
 websockets==10.3
     # via uvicorn
+wrapt==1.14.1
+    # via deprecated
 xlrd==2.0.1
     # via pyxform
 
