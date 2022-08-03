@@ -95,7 +95,6 @@ class TestFileRoute(TestBase):
     def test_file_create(self, create_user_and_login):
         _, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_file(auth_credentials)
 
@@ -108,7 +107,6 @@ class TestFileRoute(TestBase):
         mock_presigned_create.return_value = "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540"
         user, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_file(auth_credentials)
 
@@ -155,7 +153,6 @@ class TestFileRoute(TestBase):
     def test_file_delete(self, create_user_and_login):
         _, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_file(auth_credentials)
 
@@ -193,7 +190,6 @@ class TestFileRoute(TestBase):
         mock_presigned_create.return_value = "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540"
         user, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         config = Configuration.create(
             self.db,
@@ -260,7 +256,6 @@ class TestFileRoute(TestBase):
 
     def test_file_list(self, create_user_and_login):
         user, jwt = create_user_and_login
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         self._create_file(auth_credentials)
 
@@ -299,7 +294,6 @@ class TestFileRoute(TestBase):
         self, mock_start_csv_import, create_user_and_login
     ):
         _, jwt = create_user_and_login
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_file(auth_credentials)
 
@@ -329,7 +323,6 @@ class TestFileRoute(TestBase):
     def test_file_get(self, mock_presigned_create, create_user_and_login):
         mock_presigned_create.return_value = "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540"
         user, jwt = create_user_and_login
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         self._create_file(auth_credentials)
 
@@ -356,7 +349,6 @@ class TestFileRoute(TestBase):
 
     def test_file_get_raises_error_on_invalid_id(self, create_user_and_login):
         user, jwt = create_user_and_login
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
 
         response = self.client.get("/api/v1/files/form_id=1", headers=auth_credentials)

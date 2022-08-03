@@ -142,8 +142,6 @@ def handle_oauth_callback(
                     },
                 )
             return JSONResponse(
-                schemas.UserBearerTokenResponse(
-                    bearer_token=session_data.decode("utf-8")
-                ).dict()
+                schemas.UserBearerTokenResponse(bearer_token=session_data).dict()
             )
     raise HTTPException(status_code=401, detail="Authentication failed.")

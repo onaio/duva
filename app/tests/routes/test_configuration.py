@@ -39,7 +39,6 @@ class TestConfiguration(TestBase):
 
     def test_create_retrieve_config(self, create_user_and_login):
         _, jwt = create_user_and_login
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
 
@@ -65,7 +64,6 @@ class TestConfiguration(TestBase):
 
     def test_delete_config(self, create_user_and_login):
         _, jwt = create_user_and_login
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
         assert response.status_code == 201
@@ -81,7 +79,6 @@ class TestConfiguration(TestBase):
     @patch("app.routers.configuration.TableauClient")
     def test_patch_config(self, mock_client, create_user_and_login):
         _, jwt = create_user_and_login
-        jwt = jwt.decode("utf-8")
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
 
