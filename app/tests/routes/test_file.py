@@ -92,7 +92,8 @@ class TestFileRoute(TestBase):
         self.db.query(HyperFile).delete()
         self.db.commit()
 
-    def test_file_create(self, create_user_and_login):
+    @patch("app.utils.auth_utils.get_access_token")
+    def test_file_create(self, mock_get_access_token, create_user_and_login):
         _, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
@@ -102,8 +103,11 @@ class TestFileRoute(TestBase):
         assert len(HyperFile.get_all(self.db)) == num_of_files + 1
         self._cleanup_files()
 
+    @patch("app.utils.auth_utils.get_access_token")
     @patch("app.routers.file.S3Client.generate_presigned_download_url")
-    def test_file_update(self, mock_presigned_create, create_user_and_login):
+    def test_file_update(
+        self, mock_presigned_create, mock_get_access_token, create_user_and_login
+    ):
         mock_presigned_create.return_value = "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540"
         user, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
@@ -150,7 +154,8 @@ class TestFileRoute(TestBase):
         )
         self._cleanup_files()
 
-    def test_file_delete(self, create_user_and_login):
+    @patch("app.utils.auth_utils.get_access_token")
+    def test_file_delete(self, mock_get_access_token, create_user_and_login):
         _, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
@@ -185,8 +190,11 @@ class TestFileRoute(TestBase):
             assert len(HyperFile.get_all(self.db)) == num_of_files - 1
             self._cleanup_files()
 
+    @patch("app.utils.auth_utils.get_access_token")
     @patch("app.routers.file.S3Client.generate_presigned_download_url")
-    def test_file_with_config(self, mock_presigned_create, create_user_and_login):
+    def test_file_with_config(
+        self, mock_presigned_create, mock_get_access_token, create_user_and_login
+    ):
         mock_presigned_create.return_value = "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540"
         user, jwt = create_user_and_login
         num_of_files = len(HyperFile.get_all(self.db))
@@ -254,7 +262,8 @@ class TestFileRoute(TestBase):
         self.db.commit()
         self._cleanup_files()
 
-    def test_file_list(self, create_user_and_login):
+    @patch("app.utils.auth_utils.get_access_token")
+    def test_file_list(self, mock_get_access_token, create_user_and_login):
         user, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         self._create_file(auth_credentials)
@@ -289,9 +298,10 @@ class TestFileRoute(TestBase):
 
         self._cleanup_files()
 
+    @patch("app.utils.auth_utils.get_access_token")
     @patch("app.routers.file.start_csv_import_to_hyper")
     def test_trigger_hyper_file_sync(
-        self, mock_start_csv_import, create_user_and_login
+        self, mock_start_csv_import, mock_get_access_token, create_user_and_login
     ):
         _, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
@@ -319,8 +329,11 @@ class TestFileRoute(TestBase):
             assert response.json() == expected_json
         self._cleanup_files()
 
+    @patch("app.utils.auth_utils.get_access_token")
     @patch("app.routers.file.S3Client.generate_presigned_download_url")
-    def test_file_get(self, mock_presigned_create, create_user_and_login):
+    def test_file_get(
+        self, mock_presigned_create, mock_get_access_token, create_user_and_login
+    ):
         mock_presigned_create.return_value = "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540"
         user, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
@@ -347,7 +360,10 @@ class TestFileRoute(TestBase):
         assert response.json()["id"] == hyperfile.id
         self._cleanup_files()
 
-    def test_file_get_raises_error_on_invalid_id(self, create_user_and_login):
+    @patch("app.utils.auth_utils.get_access_token")
+    def test_file_get_raises_error_on_invalid_id(
+        self, mock_get_access_token, create_user_and_login
+    ):
         user, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
 

@@ -37,7 +37,8 @@ class TestConfiguration(TestBase):
         self.db.query(Configuration).delete()
         self.db.commit()
 
-    def test_create_retrieve_config(self, create_user_and_login):
+    @patch("app.utils.auth_utils.get_access_token")
+    def test_create_retrieve_config(self, mock_get_access_token, create_user_and_login):
         _, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
@@ -62,7 +63,8 @@ class TestConfiguration(TestBase):
         assert response.json() == expected_data
         self._cleanup_configs()
 
-    def test_delete_config(self, create_user_and_login):
+    @patch("app.utils.auth_utils.get_access_token")
+    def test_delete_config(self, mock_get_access_token, create_user_and_login):
         _, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
@@ -76,8 +78,11 @@ class TestConfiguration(TestBase):
         assert response.status_code == 204
         assert len(Configuration.get_all(self.db)) == current_count - 1
 
+    @patch("app.utils.auth_utils.get_access_token")
     @patch("app.routers.configuration.TableauClient")
-    def test_patch_config(self, mock_client, create_user_and_login):
+    def test_patch_config(
+        self, mock_client, mock_get_access_token, create_user_and_login
+    ):
         _, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
