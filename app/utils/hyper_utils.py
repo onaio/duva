@@ -1,7 +1,7 @@
 """
 File containing utility functions related to a Hyper Database / HyperFile
 """
-from typing import List, Callable
+from typing import List, Callable, Optional
 from pathlib import Path
 
 import pandas as pd
@@ -116,6 +116,7 @@ def handle_csv_import_to_hyperfile(
         process=process,
         configuration=configuration,
         s3_destination=s3_destination,
+        hyperfile=hyperfile
     )
 
 
@@ -123,8 +124,9 @@ def handle_csv_import(
     file_path: str,
     csv_path: Path,
     process: HyperProcess,
-    configuration: Configuration = None,
-    s3_destination: str = None,
+    configuration: Optional[Configuration] = None,
+    s3_destination: Optional[str] = None,
+    hyperfile: Optional[HyperFile] = None
 ) -> int:
     """
     Handles CSV Import to Hyperfile
@@ -159,6 +161,8 @@ def handle_csv_import(
             tableau_client = TableauClient(configuration=configuration)
             tableau_client.validate_configuration(configuration)
             tableau_client.publish_hyper(file_path)
+            if hyperfile:
+                hyperfile.last_synced = datetime.now()
 
         return import_count
 
