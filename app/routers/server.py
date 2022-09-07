@@ -9,7 +9,6 @@ from app import schemas
 from app.models import Server
 from app.utils.utils import get_db
 
-
 router = APIRouter()
 
 

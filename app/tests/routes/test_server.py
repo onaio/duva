@@ -1,5 +1,7 @@
 from typing import Tuple
+
 from fastapi.responses import Response
+
 from app import schemas
 from app.models import Server
 from app.tests.test_base import TestBase

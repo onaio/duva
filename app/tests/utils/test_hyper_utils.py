@@ -1,7 +1,8 @@
 """
 TEsts for the hyper_utils module
 """
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
@@ -10,9 +11,9 @@ from app.schemas import FileCreate, FileStatusEnum
 from app.settings import settings
 from app.tests.test_base import TestBase
 from app.utils.hyper_utils import (
-    schedule_hyper_file_cron_job,
     cancel_hyper_file_job,
     handle_hyper_file_job_completion,
+    schedule_hyper_file_cron_job,
 )
 
 

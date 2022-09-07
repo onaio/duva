@@ -5,7 +5,6 @@ from app.main import app
 from app.tests.test_base import TestingSessionLocal
 from app.utils.utils import get_db, get_redis_client
 
-
 TEST_REDIS_SERVER = fakeredis.FakeServer()
 
 
@@ -32,7 +31,7 @@ app.dependency_overrides[get_redis_client] = override_get_redis_client
 @pytest.fixture(scope="function")
 def create_user_and_login():
     from app import schemas
-    from app.models import User, Server
+    from app.models import Server, User
     from app.utils.auth_utils import create_session
 
     db = TestingSessionLocal()

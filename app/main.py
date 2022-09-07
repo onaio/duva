@@ -1,27 +1,28 @@
 import os
-import uvicorn
+
 import sentry_sdk
+import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi_cache import caches, close_caches
 from fastapi_cache.backends.redis import CACHE_KEY, RedisCacheBackend
-from tableauhyperapi import HyperProcess, Telemetry
+from redis import Redis
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_exporter import PrometheusMiddleware, handle_metrics
-from redis import Redis
+from tableauhyperapi import HyperProcess, Telemetry
 
 from app.common_tags import HYPER_PROCESS_CACHE_KEY
-from app.database import engine, SessionLocal
+from app.database import SessionLocal, engine
+from app.jobs.scheduler import clear_scheduler_queue
 from app.models import Base, HyperFile
-from app.settings import settings
-from app.utils.onadata_utils import schedule_all_active_forms
+from app.routers.configuration import router as configurations_router
 from app.routers.file import router as file_router
 from app.routers.oauth import router as oauth_router
 from app.routers.server import router as server_router
-from app.routers.configuration import router as configurations_router
-from app.jobs.scheduler import clear_scheduler_queue
+from app.settings import settings
+from app.utils.onadata_utils import schedule_all_active_forms
 
 Base.metadata.create_all(bind=engine)
 

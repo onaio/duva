@@ -1,9 +1,9 @@
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 from httpx._models import Response
 
 from app import schemas
-from app.models import HyperFile, Configuration
+from app.models import Configuration, HyperFile
 from app.tests.test_base import TestBase
 
 

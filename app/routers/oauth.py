@@ -11,9 +11,9 @@ from fastapi.routing import APIRouter
 
 from app import schemas
 from app.common_tags import ONADATA_TOKEN_ENDPOINT, ONADATA_USER_ENDPOINT
-from app.models import User, Server
+from app.models import Server, User
+from app.utils.auth_utils import IsAuthenticatedUser, create_session
 from app.utils.utils import get_db, get_redis_client
-from app.utils.auth_utils import create_session, IsAuthenticatedUser
 
 router = APIRouter()
 

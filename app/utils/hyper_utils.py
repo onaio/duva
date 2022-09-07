@@ -1,38 +1,38 @@
 """
 File containing utility functions related to a Hyper Database / HyperFile
 """
-from typing import List, Callable, Optional
+from datetime import datetime
 from pathlib import Path
+from typing import Callable, List, Optional
 
 import pandas as pd
-from datetime import datetime
 from pandas.errors import EmptyDataError
 from rq.job import Job
-from sqlalchemy.orm.session import Session
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.orm.session import Session
 from tableauhyperapi import (
-    SqlType,
     Connection,
+    CreateMode,
     HyperProcess,
+    Name,
+    SqlType,
+    TableDefinition,
     TableName,
     escape_string_literal,
-    TableDefinition,
-    CreateMode,
-    Name,
 )
 
-from app.database import SessionLocal
-from app.schemas import FileStatusEnum
-from app.settings import settings
 from app.common_tags import (
+    FAILURE_REASON_METADATA,
     JOB_ID_METADATA,
     SYNC_FAILURES_METADATA,
-    FAILURE_REASON_METADATA,
 )
-from app.jobs.scheduler import schedule_cron_job, cancel_job
+from app.database import SessionLocal
+from app.jobs.scheduler import cancel_job, schedule_cron_job
 from app.libs.s3.client import S3Client
 from app.libs.tableau.client import TableauClient
-from app.models import HyperFile, Configuration
+from app.models import Configuration, HyperFile
+from app.schemas import FileStatusEnum
+from app.settings import settings
 
 
 def element_type_to_hyper_sql_type(elem_type: str) -> SqlType:
@@ -116,7 +116,7 @@ def handle_csv_import_to_hyperfile(
         process=process,
         configuration=configuration,
         s3_destination=s3_destination,
-        hyperfile=hyperfile
+        hyperfile=hyperfile,
     )
 
 
@@ -126,7 +126,7 @@ def handle_csv_import(
     process: HyperProcess,
     configuration: Optional[Configuration] = None,
     s3_destination: Optional[str] = None,
-    hyperfile: Optional[HyperFile] = None
+    hyperfile: Optional[HyperFile] = None,
 ) -> int:
     """
     Handles CSV Import to Hyperfile

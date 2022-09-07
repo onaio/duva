@@ -3,16 +3,16 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Tuple
 
-import redis
 import jwt
-from fastapi import Request, Depends
+import redis
+from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
 
 from app import schemas
-from app.settings import settings
 from app.models import User
-from app.utils.utils import get_db, get_redis_client
+from app.settings import settings
 from app.utils.onadata_utils import get_access_token
+from app.utils.utils import get_db, get_redis_client
 
 
 def create_session(

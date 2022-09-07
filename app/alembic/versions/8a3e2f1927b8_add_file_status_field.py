@@ -5,10 +5,10 @@ Revises: 60383c2a9b44
 Create Date: 2021-02-23 11:30:23.732253
 
 """
-from app.models import ChoiceType, schemas
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
+from app.models import ChoiceType, schemas
 
 # revision identifiers, used by Alembic.
 revision = "8a3e2f1927b8"
