@@ -2,10 +2,11 @@
 import os
 
 import sentry_sdk
-from app.settings import settings
 from redis import Redis
-from rq import Connection, Worker, Queue
+from rq import Connection, Queue, Worker
 from sentry_sdk.integrations.rq import RqIntegration
+
+from app.settings import settings
 
 # Preload libraries
 

@@ -1,11 +1,11 @@
 # Schema Definitions
-from enum import Enum
-
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
-from app.common_tags import SYNC_FAILURES_METADATA, JOB_ID_METADATA
+
+from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
 
 
 class FileStatusEnum(str, Enum):

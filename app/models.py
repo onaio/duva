@@ -1,24 +1,25 @@
-import sqlalchemy.types as types
 import json
 from typing import Optional
+
+import sqlalchemy.types as types
 from cryptography.fernet import Fernet
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     DateTime,
     Integer,
     String,
     UniqueConstraint,
-    JSON,
 )
 from sqlalchemy.orm import Session, relationship
 from sqlalchemy.sql.schema import ForeignKey
 
 from app import schemas
-from app.common_tags import SYNC_FAILURES_METADATA, JOB_ID_METADATA
+from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
 from app.database import Base
-from app.settings import settings
 from app.libs.s3.client import S3Client
+from app.settings import settings
 
 
 class ChoiceType(types.TypeDecorator):

@@ -1,6 +1,6 @@
-import tableauserverclient as TSC
-
 from pathlib import Path
+
+import tableauserverclient as TSC
 
 from app.models import Configuration
 

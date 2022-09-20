@@ -2,6 +2,7 @@
 Settings file for RQ Workers
 """
 import os
+
 import sentry_sdk
 from sentry_sdk.integrations.rq import RqIntegration
 

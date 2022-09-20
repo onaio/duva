@@ -1,10 +1,10 @@
 import os
+from typing import Callable
 
 from redis import Redis
 from rq import Queue
 from rq.job import Job
 from rq_scheduler import Scheduler
-from typing import Callable
 
 QUEUE_NAME = os.environ.get("QUEUE_NAME", "default")
 CRON_SCHEDULE = os.environ.get("CRON_SCHEDULE", "*/15 * * * *")

@@ -5,16 +5,15 @@ from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 from fastapi.routing import APIRouter
-from sqlalchemy.orm import Session
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app import schemas
+from app.libs.tableau.client import InvalidConfiguration, TableauClient
 from app.models import Configuration, User
 from app.utils.auth_utils import IsAuthenticatedUser
 from app.utils.utils import get_db
-from app.libs.tableau.client import TableauClient, InvalidConfiguration
-
 
 router = APIRouter()
 

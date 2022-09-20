@@ -1,10 +1,9 @@
 from fastapi_cache import caches
-
 from fastapi_cache.backends.redis import CACHE_KEY, RedisCacheBackend
 from tableauhyperapi import HyperProcess, Telemetry
+
 from app.common_tags import HYPER_PROCESS_CACHE_KEY
 from app.settings import settings
-
 from app.utils.onadata_utils import start_csv_import_to_hyper
 
 

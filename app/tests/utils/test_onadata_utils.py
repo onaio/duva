@@ -1,21 +1,21 @@
 """
 Tests for the onadata_utils module
 """
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
 from httpx._models import Response
 
 from app import schemas
-from app.models import Server, User, HyperFile, Configuration
+from app.models import Configuration, HyperFile, Server, User
 from app.tests.test_base import TestBase
 from app.utils.onadata_utils import (
+    ConnectionRequestError,
+    CSVExportFailure,
+    _get_csv_export,
     get_access_token,
     get_csv_export,
-    _get_csv_export,
-    CSVExportFailure,
-    ConnectionRequestError,
 )
 
 

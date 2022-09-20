@@ -3,14 +3,15 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Tuple
 
-import redis
 import jwt
-from fastapi import Request, Depends
+import redis
+from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
 
 from app import schemas
-from app.settings import settings
 from app.models import User
+from app.settings import settings
+from app.utils.onadata_utils import get_access_token
 from app.utils.utils import get_db, get_redis_client
 
 
@@ -79,9 +80,10 @@ class IsAuthenticatedUser:
 
             if self.is_valid_session(session_id=session_id, session_key=session_key):
                 user = User.get_using_server_and_username(self.db, username, server_id)
-                if not user:
-                    return _raise_error(invalid_credentials_error)
-                return user
+                # Validate that the users credentials are still valid on the server
+                if user and get_access_token(user, user.server, self.db):
+                    return user
+                return _raise_error(invalid_credentials_error)
 
         return _raise_error(
             HTTPException(status_code=401, detail="Authentication required")
