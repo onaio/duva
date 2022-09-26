@@ -14,7 +14,7 @@ All release notes for this project will be documented in this file; this project
 
 ## v0.1.0 - 2022-09-22
 
-### Buf fixes and improvements :bug:
+### Bug fixes and improvements :bug:
 
 - Ensure stored refresh token is active on authentication. PR [#40](https://github.com/onaio/duva/pull/40)
 
