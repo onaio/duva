@@ -1,6 +1,6 @@
 # Duva
 
-[![Build Status](https://travis-ci.com/onaio/duva.svg?branch=main)](https://travis-ci.com/github/onaio/duva)
+[![Build Status](https://github.com/onaio/duva/actions/workflows/ci.yml/badge.svg)](https://github.com/onaio/duva/actions/workflows/ci.yml)
 
 Duva is an API built using the [FastAPI](https://github.com/tiangolo/fastapi) framework that provides functionality to create & periodically update Tableau [Hyper](https://www.tableau.com/products/new-features/hyper) databases from CSV files. Currently the application supports connection to an [OnaData](https://github.com/onaio/onadata) server from which it'll pull data from an XLSForm and periodically export to a Tableau Hyper database
 
