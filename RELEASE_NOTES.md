@@ -12,6 +12,12 @@ This project has been funded by DG ECHO and implemented by Caritas Switzerland a
 
 All release notes for this project will be documented in this file; this project follows [Semantic Versioning](https://semver.org/).
 
+## v0.1.0 - 2022-09-26
+
+### Bug fixes and improvements :bug:
+
+- Ensure stored refresh token is active on authentication. PR [#40](https://github.com/onaio/duva/pull/40)
+
 ## v0.0.8 - 2022-03-02
 
 ### Bug fixes and improvements :bug:
