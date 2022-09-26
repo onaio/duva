@@ -12,7 +12,7 @@ This project has been funded by DG ECHO and implemented by Caritas Switzerland a
 
 All release notes for this project will be documented in this file; this project follows [Semantic Versioning](https://semver.org/).
 
-## v0.1.0 - 2022-09-22
+## v0.1.0 - 2022-09-26
 
 ### Bug fixes and improvements :bug:
 
