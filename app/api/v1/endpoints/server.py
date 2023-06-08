@@ -1,13 +1,13 @@
 # Routes for the Server (/server) endpoint
 from typing import List
+from urllib.parse import urljoin
 
 from fastapi import Depends, HTTPException
 from fastapi.routing import APIRouter
 from starlette.datastructures import URL
 
-from app import schemas
+from app import crud, schemas
 from app.api.deps import get_db
-from app.models import Server
 
 router = APIRouter()
 
@@ -27,12 +27,12 @@ def create_server_object(server: schemas.ServerCreate, db=Depends(get_db)):
     url = URL(server.url)
     if not url.scheme or not url.netloc:
         raise HTTPException(status_code=400, detail=f"Invalid url {server.url}")
-    server.url = f"{url.scheme}://{url.netloc}"
-    if Server.get_using_url(db, server.url):
+    server.url = urljoin(f"{url.scheme}://{url.netloc}", "/")
+    if crud.server.get_using_url(db, url=server.url):
         raise HTTPException(
-            status_code=400, detail=f"Server with url '{server.url}' already exists."
+            status_code=400, detail=f"Server {server.url} already configured."
         )
-    server = Server.create(db, server)
+    server = crud.server.create(db, obj_in=server)
     return server
 
 
@@ -44,7 +44,7 @@ def retrieve_server(obj_id: int, db=Depends(get_db)):
     """
     Retrieve a specific server configuration
     """
-    server = Server.get(db=db, object_id=obj_id)
+    server = crud.server.get(db, obj_id)
     if not server:
         raise HTTPException(
             status_code=404,
@@ -54,9 +54,9 @@ def retrieve_server(obj_id: int, db=Depends(get_db)):
 
 
 @router.get("/", response_model=List[schemas.ServerResponse])
-def list_servers(db=Depends(get_db)):
+def list_servers(db=Depends(get_db), *, skip: int = 0, limit: int = 100):
     """
     List all servers configured to work with the application that users can authorize against.
     """
-    servers = Server.get_all(db)
+    servers = crud.server.get_multi(db, skip=skip, limit=limit)
     return servers
