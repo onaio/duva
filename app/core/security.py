@@ -60,7 +60,12 @@ def request_onadata_credentials(server: Server, code: str) -> Tuple[str, str]:
         return resp_json["access_token"], resp_json["refresh_token"]
 
 
-def create_session(request: Request, user: User, expires_timedelta: timedelta, redis_client = Depends(get_redis_client)) -> Tuple[str, str]:
+def create_session(
+    request: Request,
+    user: User,
+    expires_timedelta: timedelta,
+    redis_client=Depends(get_redis_client),
+) -> Tuple[Request, str]:
     session_key = f"{user.id}-sessions"
     session_id = str(uuid4())
     expires = datetime.utcnow() + expires_timedelta
@@ -68,7 +73,8 @@ def create_session(request: Request, user: User, expires_timedelta: timedelta, r
     session_data = {"sub": str(user.id), "id": session_id, "exp": expires}
     request.session["session"] = json.dumps(session_data)
     redis_client.hset(session_key, session_id, json.dumps(session_data))
-    return session_id, jwt.encode(session_data, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return request, session_id
+
 
 def create_access_token(
     subject: Union[str, Any], expires_delta: Optional[timedelta] = None
