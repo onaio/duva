@@ -1,5 +1,5 @@
-import secrets
 from typing import Any, Dict, List, Optional, Union
+from cryptography.fernet import Fernet
 
 from pydantic import AnyHttpUrl, BaseSettings, HttpUrl, PostgresDsn, RedisDsn, validator
 
@@ -14,12 +14,13 @@ class Settings(BaseSettings):
     APP_PORT: int = 8000
     MEDIA_ROOT: str = "/app/media"
     DEBUG: bool = False
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    SECRET_KEY: str  # Fernet.generate_key().decode()
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = (
         60 * 24 * 7
     )  # 60 minutes * 24 hours * 7 days = 7 days
     SESSION_EXPIRE_MINUTES: int = 60 * 24 * 14
+    DOWNLOAD_EXPIRE_SECONDS: int = 3600
 
     FIRST_SUPERUSER: str = "admin@duva.ona.io"
     FIRST_SUPERUSER_PASSWORD: str = "admin"
