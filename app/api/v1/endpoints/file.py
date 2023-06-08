@@ -1,83 +1,158 @@
-# Routes for the Hyperfile () endpoint
-import os
-import shutil
-from datetime import datetime, timedelta
-from pathlib import Path
-from tempfile import NamedTemporaryFile
-from typing import List, Optional, Union
-
-from fastapi import BackgroundTasks, Depends, File, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.routing import APIRouter
-from fastapi_cache import caches
-from redis.client import Redis
+from typing import List, Optional
+from urllib.parse import urljoin
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from tableauhyperapi.hyperprocess import HyperProcess
 
-from app import schemas
-from app.api.deps import get_db, get_redis_client
-from app.common_tags import HYPER_PROCESS_CACHE_KEY
-from app.libs.s3.client import S3Client
-from app.libs.tableau.client import InvalidConfiguration, TableauClient
-from app.models import Configuration, HyperFile, User
-from app.settings import settings
-from app.utils.auth_utils import IsAuthenticatedUser
-from app.utils.hyper_utils import handle_csv_import
-from app.utils.onadata_utils import (
-    ConnectionRequestError,
-    DoesNotExist,
-    UnsupportedForm,
-    create_or_get_hyperfile,
-    schedule_hyper_file_cron_job,
-    start_csv_import_to_hyper,
-    start_csv_import_to_hyper_job,
-)
+from app import crud, schemas
+from app.api.auth_deps import get_current_user
+from app.api.deps import get_db
+from app.core.importer import import_to_hyper
+from app.models.configuration import Configuration
+from app.models.hyperfile import HyperFile
+from app.models.user import User
+
 
 router = APIRouter()
 
 
-def _create_hyper_file_response(
-    hyper_file: HyperFile, db: Session, request: Request
+def inject_urls(
+    resp: schemas.FileResponseBody, request: Request, file: HyperFile
 ) -> schemas.FileResponseBody:
-    from app.main import app
+    from app.api.v1.api import api_router
 
-    s3_client = S3Client()
-    file_path = hyper_file.get_file_path(db)
-    download_url = s3_client.generate_presigned_download_url(
-        file_path, expiration=settings.download_url_lifetime
+    url = f"{request.base_url.scheme}://{request.base_url.netloc}"
+    configuration_url = urljoin(
+        url,
+        api_router.url_path_for("get_configuration", config_id=file.configuration_id),
     )
-    data = schemas.File.from_orm(hyper_file).dict()
-    if download_url:
-        expiry_date = datetime.utcnow() + timedelta(
-            seconds=settings.download_url_lifetime
-        )
-        data.update(
-            {
-                "download_url": download_url,
-                "download_url_valid_till": expiry_date.isoformat(),
-            }
-        )
-    if hyper_file.configuration_id:
-        config_url = f"{request.base_url.scheme}://{request.base_url.netloc}"
-        config_url += app.url_path_for(
-            "get_configuration", config_id=hyper_file.configuration_id
-        )
-        data.update({"configuration_url": config_url})
-    response = schemas.FileResponseBody(**data)
+    download_url, download_url_expires = (
+        "",
+        "",
+    )  # crud.hyperfile.get_download_links(obj=file)
+    resp.configuration_url = configuration_url
+    resp.download_url = download_url
+    resp.download_url_valid_till = download_url_expires
+    return resp
+
+
+@router.get("/", response_model=List[schemas.FileListItem])
+def list_files(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    *,
+    form_id: Optional[str] = None,
+    request: Request,
+):
+    """
+    Lists out all the Hyper Files currently accessible to the logged in user
+
+    If a form_id is provided, only files associated with that form will be returned
+    """
+    response = []
+    if not user:
+        raise HTTPException(status_code=403, detail="Not authenticated")
+
+    if form_id:
+        files = crud.hyperfile.get_using_form(db=db, form_id=form_id, user_id=user.id)
+    else:
+        files = user.hyper_files
+
+    for file in files:
+        if file.user_id == user.id:
+            url = f"{request.base_url.scheme}://{request.base_url.netloc}"
+            url += router.url_path_for("get_file", file_id=file.id)
+            entry = schemas.FileListItem.from_orm(file)
+            entry.url = url
+            response.append(entry)
     return response
 
 
-@router.post("", status_code=201, response_model=schemas.FileResponseBody)
-def create_hyper_file(
-    request: Request,
-    file_request: schemas.FileRequestBody,
-    background_tasks: BackgroundTasks,
-    user: User = Depends(IsAuthenticatedUser()),
+@router.get("/{file_id}", response_model=schemas.FileResponseBody)
+def get_file(
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    redis_client: Redis = Depends(get_redis_client),
+    *,
+    file_id: int,
+    request: Request,
 ):
     """
-    Creates a Hyper file object.
+    Retrieve a specific Hyper File
+    """
+    file = crud.hyperfile.get(db=db, id=file_id)
+
+    if file and file.user_id == user.id:
+        return inject_urls(schemas.FileResponseBody.from_orm(file), request, file)
+    else:
+        raise HTTPException(status_code=404, detail="File not found.")
+
+
+@router.patch("/{file_id}", response_model=schemas.FileResponseBody)
+def update_file(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    *,
+    file_id: int,
+    request: Request,
+    body: schemas.FilePatchRequestBody,
+):
+    """
+    Update a specific Hyper File
+    """
+    file = crud.hyperfile.get(db=db, id=file_id)
+    if file and file.user_id == user.id:
+        file = crud.hyperfile.update(db=db, db_obj=file, obj_in=body)
+        return inject_urls(schemas.FileResponseBody.from_orm(file), request, file)
+    else:
+        raise HTTPException(status_code=404, detail="File not found.")
+
+
+@router.delete("/{file_id}", status_code=204)
+def delete_file(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    *,
+    file_id: int,
+):
+    """
+    Delete a specific Hyper File
+    """
+    file = crud.hyperfile.get(db=db, id=file_id)
+    if file and file.user_id == user.id:
+        crud.hyperfile.delete(db=db, id=file_id)
+    else:
+        raise HTTPException(status_code=404, detail="File not found.")
+
+
+# TODO Add import route
+# @router.post("/csv_import", status_code=200, response_class=FileResponse)
+# def import_data(id_string: str, csv_file: UploadFile = File(...)):
+#     """
+#     Experimental Endpoint: Creates and imports `csv_file` data into a hyper file.
+#     """
+#     process: HyperProcess = caches.get(HYPER_PROCESS_CACHE_KEY)
+#     suffix = Path(csv_file.filename).suffix
+#     csv_file.file.seek(0)
+#     file_path = f"{settings.media_path}/{id_string}.hyper"
+#     with NamedTemporaryFile(delete=False, suffix=suffix) as tmp_upload:
+#         shutil.copyfileobj(csv_file.file, tmp_upload)
+#         tmp_upload.flush()
+#         handle_csv_import(
+#             file_path=file_path, csv_path=Path(tmp_upload.name), process=process
+#         )
+#     return FileResponse(file_path, filename=f"{id_string}.hyper")
+
+
+@router.post("/", status_code=201, response_model=schemas.FileResponseBody)
+def create_file(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    *,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    body: schemas.FileRequestBody,
+):
+    """
+    Create a new HyperFile
 
     JSON Data Parameters:
       - `form_id`: An integer representing the ID of the form whose data should be exported
@@ -88,233 +163,29 @@ def create_hyper_file(
       - `configuration_id`: An integer representing the ID of a Configuration(_See docs on /configurations route_).
                             Determines where the hyper file is pushed to after it has been updated with the latest form data.
     """
-    process: HyperProcess = caches.get(HYPER_PROCESS_CACHE_KEY)
-    configuration = None
-    try:
-        file_data = schemas.FileCreate(form_id=file_request.form_id, user=user.id)
-        if file_request.configuration_id:
-            configuration = Configuration.get(db, file_request.configuration_id)
-            if not configuration or not configuration.user == user.id:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Tableau configuration with ID {file_request.configuration_id} not found",
-                )
-        file_instance, created = create_or_get_hyperfile(db, file_data, process)
-    except (DoesNotExist, UnsupportedForm) as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except ConnectionRequestError as e:
-        raise HTTPException(status_code=502, detail=str(e))
-    else:
-        if not created:
-            raise HTTPException(status_code=400, detail="File already exists.")
+    if not user:
+        raise HTTPException(status_code=403, detail="Not authenticated")
 
-        if configuration:
-            file_instance.configuration_id = configuration.id
-
-        if file_request.sync_immediately:
-            background_tasks.add_task(
-                start_csv_import_to_hyper, file_instance.id, process
-            )
-        background_tasks.add_task(
-            schedule_hyper_file_cron_job,
-            start_csv_import_to_hyper_job,
-            file_instance.id,
+    create_data = schemas.FileCreate(form_id=body.form_id, user_id=user.id)
+    if body.configuration_id:
+        configuration: Optional[Configuration] = crud.configuration.get(
+            db, id=body.configuration_id
         )
-        file_instance.file_status = schemas.FileStatusEnum.queued.value
-        db.commit()
-        return _create_hyper_file_response(file_instance, db, request)
-
-
-@router.get("", response_model=List[schemas.FileListItem])
-def list_hyper_files(
-    request: Request,
-    user: User = Depends(IsAuthenticatedUser()),
-    form_id: Optional[str] = None,
-    db: Session = Depends(get_db),
-):
-    """
-    This endpoint lists out all the hyper files currently owned by the
-    logged in user.
-
-    Query Parameters:
-      - `form_id`: An integer representing an ID of a form on the users authenticated
-                   server.
-    """
-    response = []
-    hyperfiles = []
-    if form_id:
-        hyperfiles = HyperFile.filter(user, form_id, db)
-    else:
-        hyperfiles = user.files
-
-    for hyperfile in hyperfiles:
-        url = request.base_url.scheme + "://" + request.base_url.netloc
-        url += router.url_path_for("get_hyper_file", file_id=hyperfile.id)
-        response.append(
-            schemas.FileListItem(
-                url=url,
-                id=hyperfile.id,
-                form_id=hyperfile.form_id,
-                filename=hyperfile.filename,
-                file_status=hyperfile.file_status,
-                last_updated=hyperfile.last_updated,
-                last_synced=hyperfile.last_synced,
-                meta_data=hyperfile.meta_data,
-            )
-        )
-    return response
-
-
-@router.get("/{file_id}", response_model=schemas.FileResponseBody)
-def get_hyper_file(
-    file_id: Union[str, int],
-    request: Request,
-    user: User = Depends(IsAuthenticatedUser()),
-    db: Session = Depends(get_db),
-):
-    """
-    Retrieves a specific hyper file. _This endpoint supports both `.json` and `.hyper` response_
-
-    The `.json` response provides the JSON representation of the hyper file object. While the `.hyper`
-    response provides a FileResponse that contains the latest hyper file download.
-    """
-    response_type = None
-    file_parts = file_id.split(".")
-    if len(file_parts) == 2:
-        file_id, response_type = file_parts
-
-    try:
-        file_id = int(file_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid file ID")
-
-    hyperfile = HyperFile.get(db, file_id)
-
-    if hyperfile and user.id == hyperfile.user:
-        if not response_type or response_type == "json":
-            return _create_hyper_file_response(hyperfile, db, request)
-        elif response_type == "hyper":
-            file_path = hyperfile.retrieve_latest_file(db)
-            if os.path.exists(file_path):
-                return FileResponse(file_path, filename=hyperfile.filename)
-            else:
-                raise HTTPException(
-                    status_code=404, detail="File currently not available"
-                )
-        else:
-            raise HTTPException(status_code=400, detail="Unsupported content type")
-    else:
-        raise HTTPException(status_code=404, detail="File not found")
-
-
-@router.patch("/{file_id}", status_code=200, response_model=schemas.FileResponseBody)
-def patch_hyper_file(
-    file_id: int,
-    request: Request,
-    data: schemas.FilePatchRequestBody,
-    user: User = Depends(IsAuthenticatedUser()),
-    db: Session = Depends(get_db),
-):
-    """
-    Partially updates a specific hyper file object
-    """
-    hyper_file = HyperFile.get(db, file_id)
-
-    if not hyper_file or hyper_file.user != user.id:
-        raise HTTPException(status_code=404, detail="File not found")
-
-    configuration = Configuration.get(db, data.configuration_id)
-    if not configuration or not configuration.user == user.id:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Tableau configuration with ID {data.configuration_id} not found",
-        )
-    hyper_file.configuration_id = configuration.id
-    db.commit()
-    db.refresh(hyper_file)
-    return _create_hyper_file_response(hyper_file, db, request)
-
-
-@router.post("/csv_import", status_code=200, response_class=FileResponse)
-def import_data(id_string: str, csv_file: UploadFile = File(...)):
-    """
-    Experimental Endpoint: Creates and imports `csv_file` data into a hyper file.
-    """
-    process: HyperProcess = caches.get(HYPER_PROCESS_CACHE_KEY)
-    suffix = Path(csv_file.filename).suffix
-    csv_file.file.seek(0)
-    file_path = f"{settings.media_path}/{id_string}.hyper"
-    with NamedTemporaryFile(delete=False, suffix=suffix) as tmp_upload:
-        shutil.copyfileobj(csv_file.file, tmp_upload)
-        tmp_upload.flush()
-        handle_csv_import(
-            file_path=file_path, csv_path=Path(tmp_upload.name), process=process
-        )
-    return FileResponse(file_path, filename=f"{id_string}.hyper")
-
-
-@router.delete("/{file_id}", status_code=204)
-def delete_hyper_file(
-    file_id: int,
-    user: User = Depends(IsAuthenticatedUser()),
-    db: Session = Depends(get_db),
-):
-    """
-    Permanently delete a Hyper File Object
-    """
-    hyper_file = HyperFile.get(db, file_id)
-
-    if hyper_file and hyper_file.user == user.id:
-        # Delete file from S3
-        s3_client = S3Client()
-        if s3_client.delete(hyper_file.get_file_path(db)):
-            # Delete Hyper File object from database
-            HyperFile.delete(db, file_id)
-            db.commit()
-    else:
-        raise HTTPException(status_code=400)
-
-
-@router.post("/{file_id}/sync")
-def trigger_hyper_file_sync(
-    request: Request,
-    file_id: int,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
-    user: User = Depends(IsAuthenticatedUser()),
-    redis_client: Redis = Depends(get_redis_client),
-):
-    """
-    Trigger Hyper file sync; Starts a process that updates the
-    hyper files data.
-    """
-    hyper_file = HyperFile.get(db, file_id)
-
-    if not hyper_file:
-        raise HTTPException(404, "File not found.")
-
-    if hyper_file.configuration:
-        try:
-            TableauClient.validate_configuration(hyper_file.configuration)
-        except InvalidConfiguration as e:
+        if not configuration or not configuration.user_id == user.id:
             raise HTTPException(
-                400,
-                detail=f"Invalid configuration ID {hyper_file.configuration.id}: {e}",
+                status_code=404, detail="Configuration not found with given ID"
             )
+        create_data.configuration_id = body.configuration_id
 
-    if hyper_file.user == user.id:
-        status_code = 200
-        if hyper_file.file_status not in [
-            schemas.FileStatusEnum.queued,
-            schemas.FileStatusEnum.syncing,
-        ]:
-            process: HyperProcess = caches.get(HYPER_PROCESS_CACHE_KEY)
-            background_tasks.add_task(start_csv_import_to_hyper, hyper_file.id, process)
-        else:
-            status_code = 202
+    try:
+        hfile = crud.hyperfile.create(db=db, obj_in=create_data, user=user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-        return JSONResponse(
-            {"message": "File syncing is currently on-going"}, status_code=status_code
-        )
-    else:
-        raise HTTPException(401)
+    if body.sync_immediately:
+        background_tasks.add_task(import_to_hyper, hfile.id)
+    # TODO
+    # background_tasks.add_task(start_csv_import_to_hyper, hfile.id, process)
+    # TODO
+    # Schedule hyper file cron job
+    return inject_urls(schemas.FileResponseBody.from_orm(hfile), request, hfile)
