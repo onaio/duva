@@ -12,7 +12,7 @@ from app.models import Server
 router = APIRouter()
 
 
-@router.post("/api/v1/servers", response_model=schemas.ServerResponse, status_code=201)
+@router.post("/", response_model=schemas.ServerResponse, status_code=201)
 def create_server_object(server: schemas.ServerCreate, db=Depends(get_db)):
     """
     Create new Server configuration objects.
@@ -37,7 +37,7 @@ def create_server_object(server: schemas.ServerCreate, db=Depends(get_db)):
 
 
 @router.get(
-    "/api/v1/servers/{obj_id}",
+    "/{obj_id}",
     response_model=schemas.ServerResponse,
 )
 def retrieve_server(obj_id: int, db=Depends(get_db)):
@@ -53,7 +53,7 @@ def retrieve_server(obj_id: int, db=Depends(get_db)):
     return server
 
 
-@router.get("/api/v1/servers", response_model=List[schemas.ServerResponse])
+@router.get("/", response_model=List[schemas.ServerResponse])
 def list_servers(db=Depends(get_db)):
     """
     List all servers configured to work with the application that users can authorize against.

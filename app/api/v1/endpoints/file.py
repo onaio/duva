@@ -1,4 +1,4 @@
-# Routes for the Hyperfile (/files) endpoint
+# Routes for the Hyperfile () endpoint
 import os
 import shutil
 from datetime import datetime, timedelta
@@ -64,7 +64,7 @@ def _create_hyper_file_response(
     return response
 
 
-@router.post("/api/v1/files", status_code=201, response_model=schemas.FileResponseBody)
+@router.post("", status_code=201, response_model=schemas.FileResponseBody)
 def create_hyper_file(
     request: Request,
     file_request: schemas.FileRequestBody,
@@ -82,7 +82,7 @@ def create_hyper_file(
       - `sync_immediately`: An optional boolean field that determines whether a forms data should
                             be synced immediately after creation of a Hyper file object. _Note: Hyper files are updated
                             periodically on a schedule by default i.e 15 minutes after creation of object or every 24 hours_
-      - `configuration_id`: An integer representing the ID of a Configuration(_See docs on /api/v1/configurations route_).
+      - `configuration_id`: An integer representing the ID of a Configuration(_See docs on /configurations route_).
                             Determines where the hyper file is pushed to after it has been updated with the latest form data.
     """
     process: HyperProcess = caches.get(HYPER_PROCESS_CACHE_KEY)
@@ -122,7 +122,7 @@ def create_hyper_file(
         return _create_hyper_file_response(file_instance, db, request)
 
 
-@router.get("/api/v1/files", response_model=List[schemas.FileListItem])
+@router.get("", response_model=List[schemas.FileListItem])
 def list_hyper_files(
     request: Request,
     user: User = Depends(IsAuthenticatedUser()),
@@ -162,7 +162,7 @@ def list_hyper_files(
     return response
 
 
-@router.get("/api/v1/files/{file_id}", response_model=schemas.FileResponseBody)
+@router.get("/{file_id}", response_model=schemas.FileResponseBody)
 def get_hyper_file(
     file_id: Union[str, int],
     request: Request,
@@ -205,7 +205,7 @@ def get_hyper_file(
 
 
 @router.patch(
-    "/api/v1/files/{file_id}", status_code=200, response_model=schemas.FileResponseBody
+    "/{file_id}", status_code=200, response_model=schemas.FileResponseBody
 )
 def patch_hyper_file(
     file_id: int,
@@ -234,7 +234,7 @@ def patch_hyper_file(
     return _create_hyper_file_response(hyper_file, db, request)
 
 
-@router.post("/api/v1/files/csv_import", status_code=200, response_class=FileResponse)
+@router.post("/csv_import", status_code=200, response_class=FileResponse)
 def import_data(id_string: str, csv_file: UploadFile = File(...)):
     """
     Experimental Endpoint: Creates and imports `csv_file` data into a hyper file.
@@ -252,7 +252,7 @@ def import_data(id_string: str, csv_file: UploadFile = File(...)):
     return FileResponse(file_path, filename=f"{id_string}.hyper")
 
 
-@router.delete("/api/v1/files/{file_id}", status_code=204)
+@router.delete("/{file_id}", status_code=204)
 def delete_hyper_file(
     file_id: int,
     user: User = Depends(IsAuthenticatedUser()),
@@ -274,7 +274,7 @@ def delete_hyper_file(
         raise HTTPException(status_code=400)
 
 
-@router.post("/api/v1/files/{file_id}/sync")
+@router.post("/{file_id}/sync")
 def trigger_hyper_file_sync(
     request: Request,
     file_id: int,

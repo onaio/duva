@@ -18,7 +18,7 @@ from app.utils.auth_utils import IsAuthenticatedUser, create_session
 router = APIRouter()
 
 
-@router.get("/api/v1/oauth/login", status_code=302)
+@router.get("/login", status_code=302)
 def start_login_flow(
     server_url: str,
     redirect_url: Optional[str] = None,
@@ -32,7 +32,7 @@ def start_login_flow(
 
     This endpoint redirects the client to the `server_url` for authentication if the server
     has a server configuration in the system. Once the user is authorized on the server
-    the user should be redirected back to `/api/v1/oauth/callback` which will handle
+    the user should be redirected back to `/callback` which will handle
     creation of a user session that will allow the user to access the applications Hyper File
     resources.
     """
@@ -59,7 +59,7 @@ def start_login_flow(
 
 
 @router.get(
-    "/api/v1/oauth/callback",
+    "/callback",
     status_code=302,
     responses={200: {"model": schemas.UserBearerTokenResponse}},
 )

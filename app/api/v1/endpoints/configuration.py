@@ -19,7 +19,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/api/v1/configurations",
+    "/",
     status_code=200,
     response_model=List[schemas.ConfigurationListResponse],
 )
@@ -43,7 +43,7 @@ def list_configurations(
 
 
 @router.get(
-    "/api/v1/configurations/{config_id}",
+    "/{config_id}",
     status_code=200,
     response_model=schemas.ConfigurationResponse,
 )
@@ -64,7 +64,7 @@ def get_configuration(
 
 
 @router.post(
-    "/api/v1/configurations",
+    "/",
     status_code=201,
     response_model=schemas.ConfigurationResponse,
 )
@@ -89,7 +89,7 @@ def create_configuration(
 
 
 @router.patch(
-    "/api/v1/configurations/{config_id}",
+    "/{config_id}",
     status_code=200,
     response_model=schemas.ConfigurationResponse,
 )
@@ -123,7 +123,7 @@ def patch_configuration(
         raise HTTPException(404, detail="Tableau Configuration not found.")
 
 
-@router.delete("/api/v1/configurations/{config_id}", status_code=204)
+@router.delete("/{config_id}", status_code=204)
 def delete_configuration(
     config_id: int,
     user: User = Depends(IsAuthenticatedUser()),
