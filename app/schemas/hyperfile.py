@@ -32,8 +32,9 @@ class FileListItem(BaseModel):
 
 
 class FileCreate(FileBase):
-    user: int
-    filename: Optional[str]
+    user_id: int
+    filename: Optional[str] = ""
+    configuration_id: Optional[int] = None
     is_active: bool = True
     meta_data: dict = {SYNC_FAILURES_METADATA: 0, JOB_ID_METADATA: ""}
 
