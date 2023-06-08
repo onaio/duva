@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.security import fernet_encrypt
 from app.crud.base import CRUDBase
 from app.models.configuration import Configuration
-from app.schemas.configuration import (ConfigurationCreate,
-                                       ConfigurationPatchRequest)
+from app.schemas.configuration import ConfigurationCreate, ConfigurationPatchRequest
 
 
 class CRUDConfiguration(

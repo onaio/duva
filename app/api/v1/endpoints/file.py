@@ -6,8 +6,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import List, Optional, Union
 
-from fastapi import (BackgroundTasks, Depends, File, HTTPException, Request,
-                     UploadFile)
+from fastapi import BackgroundTasks, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.routing import APIRouter
 from fastapi_cache import caches
@@ -24,11 +23,15 @@ from app.models import Configuration, HyperFile, User
 from app.settings import settings
 from app.utils.auth_utils import IsAuthenticatedUser
 from app.utils.hyper_utils import handle_csv_import
-from app.utils.onadata_utils import (ConnectionRequestError, DoesNotExist,
-                                     UnsupportedForm, create_or_get_hyperfile,
-                                     schedule_hyper_file_cron_job,
-                                     start_csv_import_to_hyper,
-                                     start_csv_import_to_hyper_job)
+from app.utils.onadata_utils import (
+    ConnectionRequestError,
+    DoesNotExist,
+    UnsupportedForm,
+    create_or_get_hyperfile,
+    schedule_hyper_file_cron_job,
+    start_csv_import_to_hyper,
+    start_csv_import_to_hyper_job,
+)
 
 router = APIRouter()
 
@@ -204,9 +207,7 @@ def get_hyper_file(
         raise HTTPException(status_code=404, detail="File not found")
 
 
-@router.patch(
-    "/{file_id}", status_code=200, response_model=schemas.FileResponseBody
-)
+@router.patch("/{file_id}", status_code=200, response_model=schemas.FileResponseBody)
 def patch_hyper_file(
     file_id: int,
     request: Request,

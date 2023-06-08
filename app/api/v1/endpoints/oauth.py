@@ -1,17 +1,21 @@
 # Routes for the OAuth (/oauth) endpoint
+from datetime import timedelta
 import json
-import uuid
 from typing import Optional
+from urllib.parse import urljoin
 
 import httpx
 import redis
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
+from app.core.config import settings
 from fastapi.routing import APIRouter
+import sentry_sdk
 
-from app import schemas
+from app import crud, schemas
 from app.api.deps import get_db, get_redis_client
 from app.common_tags import ONADATA_TOKEN_ENDPOINT, ONADATA_USER_ENDPOINT
+from app.core import onadata, security
 from app.models import Server, User
 from app.utils.auth_utils import IsAuthenticatedUser, create_session
 
@@ -19,7 +23,7 @@ router = APIRouter()
 
 
 @router.get("/login", status_code=302)
-def start_login_flow(
+def login_oauth(
     server_url: str,
     redirect_url: Optional[str] = None,
     user=Depends(IsAuthenticatedUser(raise_errors=False)),
@@ -44,9 +48,12 @@ def start_login_flow(
         if redirect_url:
             auth_state["redirect_url"] = redirect_url
 
-        state_key = str(uuid.uuid4())
-        redis.setex(state_key, 600, json.dumps(auth_state))
-        url = f"{server.url}/o/authorize?client_id={server.client_id}&response_type=code&state={state_key}"
+        state_key, state = security.create_oauth_state(auth_state)
+        redis.setex(state_key, timedelta(minutes=5), state)
+        url = urljoin(
+            f"{server.url}",
+            f"/o/authorize?client_id={server.client_id}&response_type=code&state={state_key}",
+        )
         return RedirectResponse(
             url=url,
             status_code=302,
@@ -60,16 +67,19 @@ def start_login_flow(
 
 @router.get(
     "/callback",
-    status_code=302,
-    responses={200: {"model": schemas.UserBearerTokenResponse}},
+    responses={
+        200: {"model": schemas.Token},
+        302: {"headers": {"Cache-Control": "no-cache, no-store, revalidate"}},
+    },
 )
-def handle_oauth_callback(
-    code: str,
-    state: str,
-    request: Request,
+def callback_oauth(
     db=Depends(get_db),
     user=Depends(IsAuthenticatedUser(raise_errors=False)),
     redis: redis.Redis = Depends(get_redis_client),
+    *,
+    request: Request,
+    code: str,
+    state: str,
 ):
     """
     Handles OAuth2 Code flow callback. This url should be registered
@@ -92,56 +102,48 @@ def handle_oauth_callback(
 
     auth_state = json.loads(auth_state)
     redis.delete(state)
-    server: Optional[schemas.Server] = Server.get(
-        db, object_id=auth_state.get("server_id")
-    )
+    server: Optional[schemas.Server] = crud.server.get(db, auth_state.get("server_id"))
+    if not server:
+        raise HTTPException(status_code=400, detail="Server not configured")
+
     redirect_url = auth_state.get("redirect_url")
-    data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "client_id": server.client_id,
-    }
-    url = f"{server.url}{ONADATA_TOKEN_ENDPOINT}"
-    resp = httpx.post(
-        url,
-        data=data,
-        auth=(
-            server.client_id,
-            Server.decrypt_value(server.client_secret),
-        ),
-    )
 
-    if resp.status_code == 200:
-        resp = resp.json()
-        access_token = resp.get("access_token")
-        refresh_token = resp.get("refresh_token")
-
-        user_url = f"{server.url}{ONADATA_USER_ENDPOINT}.json"
-        headers = {"Authorization": f"Bearer {access_token}"}
-        resp = httpx.get(user_url, headers=headers)
-        if resp.status_code == 200:
-            resp = resp.json()
-            username = resp.get("username")
-            user = User.get_using_server_and_username(db, username, server.id)
-            if not user:
-                user_data = schemas.User(
-                    username=username, refresh_token=refresh_token, server_id=server.id
-                )
-                user = User.create(db, user_data)
-            else:
-                user.refresh_token = User.encrypt_value(refresh_token)
-                db.commit()
-
-            request, session_data = create_session(user, redis, request)
-            if redirect_url:
-                return RedirectResponse(
-                    redirect_url,
-                    status_code=302,
-                    headers={
-                        "Cache-Control": "no-cache, no-store, revalidate",
-                    },
-                )
-            return JSONResponse(
-                schemas.UserBearerTokenResponse(bearer_token=session_data).dict()
+    try:
+        access_token, refresh_token = security.request_onadata_credentials(server, code)
+        profile = onadata.retrieve_onadata_profile(access_token, server.url)
+    except security.FailedToRequestOnaDataCredentials as e:
+        sentry_sdk.capture_exception(e)
+        raise HTTPException(status_code=400, detail=str(e))
+    except onadata.FailedExternalRequest as e:
+        sentry_sdk.capture_exception(e)
+        raise HTTPException(status_code=502, detail=str(e))
+    else:
+        username = profile["username"]
+        user = crud.user.get_by_username(db, username=username)
+        if not user:
+            user_in = schemas.UserCreate(
+                username=username,
+                server_id=server.id,
+                refresh_token=refresh_token,
+                access_token=access_token,
             )
-    raise HTTPException(status_code=401, detail="Authentication failed.")
+            user = crud.user.create(db, obj_in=user_in)
+        else:
+            user_in = schemas.UserUpdate(
+                refresh_token=refresh_token,
+                access_token=access_token,
+            )
+            user = crud.user.update(db, db_obj=user, obj_in=user_in)
+
+        if redirect_url:
+            # Create session for subsequent requests
+            request, _ = security.create_session(
+                request=request,
+                user=user,
+                expires_timedelta=timedelta(minutes=settings.SESSION_EXPIRE_MINUTES),
+            )
+            return RedirectResponse(url=redirect_url, status_code=302)
+        return {
+            "access_token": security.create_access_token(user.id),
+            "token_type": "bearer",
+        }
