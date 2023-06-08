@@ -6,8 +6,8 @@ from fastapi.routing import APIRouter
 from starlette.datastructures import URL
 
 from app import schemas
+from app.api.deps import get_db
 from app.models import Server
-from app.utils.utils import get_db
 
 router = APIRouter()
 

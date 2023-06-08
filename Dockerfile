@@ -1,6 +1,13 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
 
-RUN mkdir -p /root/.aws
-COPY . /app
+WORKDIR /app/
 
-RUN mkdir -p /app/media && pip install --no-cache-dir -r /app/requirements.pip
+COPY ./requirements.pip /app/requirements.pip
+COPY ./dev-requirements.pip /app/dev-requirements.pip
+RUN pip install -r requirements.pip
+
+ARG INSTALL_DEV=false
+RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then pip install -r dev-requirements.pip ; fi"
+
+COPY ./app /app
+ENV PYTHONPATH=/app

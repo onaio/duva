@@ -10,13 +10,9 @@ from httpx._models import Response
 from app import schemas
 from app.models import Configuration, HyperFile, Server, User
 from app.tests.test_base import TestBase
-from app.utils.onadata_utils import (
-    ConnectionRequestError,
-    CSVExportFailure,
-    _get_csv_export,
-    get_access_token,
-    get_csv_export,
-)
+from app.utils.onadata_utils import (ConnectionRequestError, CSVExportFailure,
+                                     _get_csv_export, get_access_token,
+                                     get_csv_export)
 
 
 class TestOnadataUtils(TestBase):

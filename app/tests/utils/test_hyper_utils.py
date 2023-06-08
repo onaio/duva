@@ -10,11 +10,9 @@ from app.models import HyperFile
 from app.schemas import FileCreate, FileStatusEnum
 from app.settings import settings
 from app.tests.test_base import TestBase
-from app.utils.hyper_utils import (
-    cancel_hyper_file_job,
-    handle_hyper_file_job_completion,
-    schedule_hyper_file_cron_job,
-)
+from app.utils.hyper_utils import (cancel_hyper_file_job,
+                                   handle_hyper_file_job_completion,
+                                   schedule_hyper_file_cron_job)
 
 
 class TestHyperUtils(TestBase):

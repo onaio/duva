@@ -1,6 +1,7 @@
 #! /usr/bin/env bash
 
 # Run migrations
-if [ "$RUN_MIGRATIONS" = "True" ]; then
-    alembic upgrade head
-fi
+alembic upgrade head
+
+# Create initial data
+python /app/app/initial_data.py 

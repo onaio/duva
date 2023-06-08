@@ -10,10 +10,10 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.routing import APIRouter
 
 from app import schemas
+from app.api.deps import get_db, get_redis_client
 from app.common_tags import ONADATA_TOKEN_ENDPOINT, ONADATA_USER_ENDPOINT
 from app.models import Server, User
 from app.utils.auth_utils import IsAuthenticatedUser, create_session
-from app.utils.utils import get_db, get_redis_client
 
 router = APIRouter()
 

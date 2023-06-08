@@ -10,10 +10,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import schemas
+from app.api.deps import get_db
 from app.libs.tableau.client import InvalidConfiguration, TableauClient
 from app.models import Configuration, User
 from app.utils.auth_utils import IsAuthenticatedUser
-from app.utils.utils import get_db
 
 router = APIRouter()
 

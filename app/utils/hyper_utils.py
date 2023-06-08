@@ -10,23 +10,13 @@ from pandas.errors import EmptyDataError
 from rq.job import Job
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.session import Session
-from tableauhyperapi import (
-    Connection,
-    CreateMode,
-    HyperProcess,
-    Name,
-    SqlType,
-    TableDefinition,
-    TableName,
-    escape_string_literal,
-)
+from tableauhyperapi import (Connection, CreateMode, HyperProcess, Name,
+                             SqlType, TableDefinition, TableName,
+                             escape_string_literal)
 
-from app.common_tags import (
-    FAILURE_REASON_METADATA,
-    JOB_ID_METADATA,
-    SYNC_FAILURES_METADATA,
-)
-from app.database import SessionLocal
+from app.common_tags import (FAILURE_REASON_METADATA, JOB_ID_METADATA,
+                             SYNC_FAILURES_METADATA)
+from app.database.session import SessionLocal
 from app.jobs.scheduler import cancel_job, schedule_cron_job
 from app.libs.s3.client import S3Client
 from app.libs.tableau.client import TableauClient

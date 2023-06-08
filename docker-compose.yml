@@ -6,7 +6,12 @@ services:
   db:
     image: postgres:13
     volumes:
-      - ../.duva_db:/var/lib/postgresql/data
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U duva"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     environment:
       - POSTGRES_PASSWORD=duva
       - POSTGRES_USER=duva
@@ -18,57 +23,27 @@ services:
     image: duva:latest
     stdin_open: true
     tty: true
+    command: ["/start-reload.sh"]
     volumes:
       # For local development
       - .:/app
-      - ~/.aws:/root/.aws
     ports:
       - "8000:80"
     depends_on:
-      - cache
-      - db
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
     environment:
       - REDIS_URL=redis://cache
-      - MEDIA_PATH=/app/media
-      - REDIS_URL=redis://cache:6379/1
-      - QUEUE_NAME=default
-      - CRON_SCHEDULE=*/30 * * * *
+      - REDIS_HOST=cache
+      - REDIS_PORT=6379
+      - REDIS_DB=1
       - DEBUG=True
-      - DATABASE_URL=postgresql://duva:duva@db/duva
-      - RUN_MIGRATIONS=True
-  scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: duva:latest
-    command: "bash init_scheduler.sh"
-    volumes:
-      # For local development
-      - .:/app
-      - ~/.aws:/root/.aws
-    depends_on:
-      - cache
-      - db
-    environment:
-      - REDIS_URL=redis://cache:6379/1
-      - QUEUE_NAME=default
-      - CRON_SCHEDULE=*/30 * * * *
-      - SCHEDULE_ALL=False
-      - DATABASE_URL=postgresql://duva:duva@db/duva
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: duva:latest
-    command: "rq worker -c app.jobs.settings"
-    volumes:
-      # For local development
-      - .:/app
-      - ~/.aws:/root/.aws
-    depends_on:
-      - cache
-      - db
-    environment:
-      - REDIS_URL=redis://cache:6379/1
-      - QUEUE_NAME=default
-      - DATABASE_URL=postgresql://duva:duva@db/duva
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=duva
+      - POSTGRES_PASSWORD=duva
+      - POSTGRES_DB=duva
+
+volumes:
+  database:
