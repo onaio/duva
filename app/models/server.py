@@ -9,5 +9,5 @@ class Server(Base):
     url = Column(String, unique=True)
     client_id = Column(String)
     client_secret = Column(String)
-    users = relationship("user", back_populates="server")
+    users = relationship("User", back_populates="server")
     configuration = Column(JSON, default={})

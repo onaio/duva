@@ -1,7 +1,6 @@
 import json
 
-from sqlalchemy import (JSON, Column, ForeignKey, Integer, String,
-                        UniqueConstraint)
+from sqlalchemy import JSON, Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.database.base_class import Base
@@ -21,7 +20,8 @@ class Configuration(Base):
     token_value = Column(String)
     project_name = Column(String)
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    user = relationship("user", back_populates="configurations")
+    user = relationship("User", back_populates="configurations")
+    hyper_files = relationship("HyperFile", back_populates="configuration")
     export_settings = Column(
         JSON,
         nullable=False,

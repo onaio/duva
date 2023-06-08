@@ -1,6 +1,14 @@
 import sqlalchemy.types as types
-from sqlalchemy import (JSON, Boolean, Column, DateTime, ForeignKey, Integer,
-                        String, UniqueConstraint)
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from app import schemas
@@ -49,6 +57,6 @@ class HyperFile(Base):  # noqa
     configuration_id = Column(
         Integer, ForeignKey("configuration.id", ondelete="SET NULL")
     )
-    configuration = relationship("configuration", back_populates="hyper_files")
+    configuration = relationship("Configuration", back_populates="hyper_files")
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    user = relationship("user", back_populates="hyper_files")
+    user = relationship("User", back_populates="hyper_files")

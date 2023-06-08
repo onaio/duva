@@ -1,5 +1,4 @@
-from sqlalchemy import (Boolean, Column, ForeignKey, Integer, String,
-                        UniqueConstraint)
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.database.base_class import Base
@@ -15,6 +14,6 @@ class User(Base):
     refresh_token = Column(String)
     access_token = Column(String)
     server_id = Column(Integer, ForeignKey("server.id", ondelete="CASCADE"))
-    server = relationship("server", back_populates="users")
-    hyper_files = relationship("hyper_file", back_populates="user")
-    configurations = relationship("configuration", back_populates="user")
+    server = relationship("Server", back_populates="users")
+    hyper_files = relationship("HyperFile", back_populates="user")
+    configurations = relationship("Configuration", back_populates="user")
