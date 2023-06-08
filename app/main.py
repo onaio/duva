@@ -1,3 +1,4 @@
+from logging.config import dictConfig
 import os
 
 import sentry_sdk
@@ -12,12 +13,16 @@ from starlette_exporter import PrometheusMiddleware, handle_metrics
 from app.api.deps import get_db, get_redis_client
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.logger import LogConfig
 
 app = FastAPI(
     title=settings.APP_NAME,
     description=settings.APP_DESCRIPTION,
     version=settings.APP_VERSION,
 )
+
+dictConfig(LogConfig().dict())
+
 
 # Include middlewares
 app.add_middleware(
