@@ -9,11 +9,10 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app import schemas
+from app import crud, schemas
+from app.api.auth_deps import get_current_user
 from app.api.deps import get_db
-from app.libs.tableau.client import InvalidConfiguration, TableauClient
-from app.models import Configuration, User
-from app.utils.auth_utils import IsAuthenticatedUser
+from app.models import User
 
 router = APIRouter()
 
@@ -24,15 +23,15 @@ router = APIRouter()
     response_model=List[schemas.ConfigurationListResponse],
 )
 def list_configurations(
+    user: User = Depends(get_current_user),
+    *,
     request: Request,
-    user: User = Depends(IsAuthenticatedUser()),
-    db: Session = Depends(get_db),
 ):
     """
     Lists out all the Tableau Configurations currently accessible for to the logged in user
     """
     resp = []
-    configurations = Configuration.filter_using_user_id(db, user.id)
+    configurations = user.configurations
 
     for config in configurations:
         config = schemas.ConfigurationListResponse.from_orm(config)
@@ -48,19 +47,20 @@ def list_configurations(
     response_model=schemas.ConfigurationResponse,
 )
 def get_configuration(
-    config_id: int,
-    user: User = Depends(IsAuthenticatedUser()),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    *,
+    config_id: int,
 ):
     """
     Retrieve a specific configuration
     """
-    config = Configuration.get(db, config_id)
+    config = crud.configuration.get(db, id=config_id)
 
-    if config and config.user == user.id:
+    if config and config.user_id == user.id:
         return config
     else:
-        raise HTTPException(status_code=404, detail="Tableau configuration not found.")
+        raise HTTPException(status_code=404, detail="Configuration not found.")
 
 
 @router.post(
@@ -69,23 +69,24 @@ def get_configuration(
     response_model=schemas.ConfigurationResponse,
 )
 def create_configuration(
-    config_data: schemas.ConfigurationCreateRequest,
-    user: User = Depends(IsAuthenticatedUser()),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    *,
+    config_data: schemas.ConfigurationCreateRequest,
 ):
     """
     Create a new Tableau Server Configuration that can be attached
     to a hyper file to define where the hyper file should be pushed to.
     """
-    config_data = schemas.ConfigurationCreate(user=user.id, **config_data.dict())
+    config_data = schemas.ConfigurationCreate(user_id=user.id, **config_data.dict())
+    if not crud.configuration.validate(obj=config_data):
+        raise HTTPException(status_code=400, detail="Invalid Configuration")
+
     try:
-        TableauClient.validate_configuration(config_data)
-        config = Configuration.create(db, config_data)
+        config = crud.configuration.create(db, obj_in=config_data)
         return config
     except (UniqueViolation, IntegrityError):
         raise HTTPException(status_code=400, detail="Configuration already exists")
-    except InvalidConfiguration as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.patch(
@@ -94,48 +95,40 @@ def create_configuration(
     response_model=schemas.ConfigurationResponse,
 )
 def patch_configuration(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    *,
     config_id: int,
     config_data: schemas.ConfigurationPatchRequest,
-    user: User = Depends(IsAuthenticatedUser()),
-    db: Session = Depends(get_db),
 ):
     """
     Partially update a Configuration
     """
-    config = Configuration.get(db, config_id)
-
-    if config and config.user == user.id:
+    config = crud.configuration.get(db, id=config_id)
+    if config and config.user_id == user.id:
+        crud.configuration.validate(obj=config_data)
         try:
-            for key, value in config_data.dict().items():
-                if value:
-                    if key == "token_value":
-                        value = Configuration.encrypt_value(value)
-                    setattr(config, key, value)
-            TableauClient.validate_configuration(config)
-            db.commit()
-            db.refresh(config)
-            return config
+            config = crud.configuration.update(db, db_obj=config, obj_in=config_data)
         except (UniqueViolation, IntegrityError):
             raise HTTPException(status_code=400, detail="Configuration already exists")
-        except InvalidConfiguration as e:
-            raise HTTPException(status_code=400, detail=str(e))
-    else:
-        raise HTTPException(404, detail="Tableau Configuration not found.")
+        else:
+            return config
+    raise HTTPException(status_code=404, detail="Configuration not found.")
 
 
 @router.delete("/{config_id}", status_code=204)
 def delete_configuration(
-    config_id: int,
-    user: User = Depends(IsAuthenticatedUser()),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    *,
+    config_id: int,
 ):
     """
     Permanently delete a configuration
     """
-    config = Configuration.get(db, config_id)
+    config = crud.configuration.get(db, id=config_id)
 
-    if config and config.user == user.id:
-        Configuration.delete(db, config.id)
-        db.commit()
+    if config and config.user_id == user.id:
+        crud.configuration.delete(db, id=config_id)
     else:
-        raise HTTPException(status_code=400)
+        raise HTTPException(status_code=404, detail="Configuration not found.")
