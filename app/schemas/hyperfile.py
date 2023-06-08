@@ -21,7 +21,7 @@ class FileBase(BaseModel):
 
 
 class FileListItem(BaseModel):
-    url: str
+    url: Optional[str] = ""
     id: int
     form_id: int
     filename: str
@@ -29,6 +29,9 @@ class FileListItem(BaseModel):
     last_updated: Optional[datetime] = None
     last_synced: Optional[datetime] = None
     meta_data: Optional[dict] = None
+
+    class Config:
+        orm_mode = True
 
 
 class FileCreate(FileBase):
