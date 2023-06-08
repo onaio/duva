@@ -1,14 +1,14 @@
 import json
 from datetime import datetime, timedelta
 from typing import Any, Optional, Tuple, Union
+from urllib.parse import urljoin
 from uuid import uuid4
-from fastapi import Depends
+from fastapi import Depends, Request
 
 import httpx
 import jwt
 from cryptography.fernet import Fernet
 from passlib.context import CryptContext
-from requests.sessions import Request
 from app.api.deps import get_redis_client
 
 from app.common_tags import ONADATA_TOKEN_ENDPOINT
@@ -25,12 +25,20 @@ class FailedToRequestOnaDataCredentials(Exception):
 
 def fernet_encrypt(value: str) -> str:
     """Encrypts a string using Fernet encryption."""
-    return Fernet(settings.SECRET_KEY).encrypt(value.encode("utf-8")).decode("utf-8")
+    return (
+        Fernet(settings.SECRET_KEY.encode())
+        .encrypt(value.encode("utf-8"))
+        .decode("utf-8")
+    )
 
 
 def fernet_decrypt(value: str) -> str:
     """Decrypts a string using Fernet key."""
-    return Fernet(settings.SECRET_KEY).decrypt(value.encode("utf-8")).decode("utf-8")
+    return (
+        Fernet(settings.SECRET_KEY.encode())
+        .decrypt(value.encode("utf-8"))
+        .decode("utf-8")
+    )
 
 
 def create_oauth_state(state: dict) -> Tuple[str, str]:
@@ -43,8 +51,9 @@ def request_onadata_credentials(server: Server, code: str) -> Tuple[str, str]:
     """
     Requests OnaData credentials using the provided code.
     """
+    url = urljoin(server.url, ONADATA_TOKEN_ENDPOINT)
     resp = httpx.post(
-        url=f"{server.url}{ONADATA_TOKEN_ENDPOINT}",
+        url=url,
         data={
             "grant_type": "authorization_code",
             "code": code,
@@ -61,18 +70,15 @@ def request_onadata_credentials(server: Server, code: str) -> Tuple[str, str]:
 
 
 def create_session(
-    request: Request,
-    user: User,
-    expires_timedelta: timedelta,
-    redis_client=Depends(get_redis_client),
+    request: Request, user: User, expires_timedelta: timedelta, redis_client
 ) -> Tuple[Request, str]:
-    session_key = f"{user.id}-sessions"
     session_id = str(uuid4())
     expires = datetime.utcnow() + expires_timedelta
 
     session_data = {"sub": str(user.id), "id": session_id, "exp": expires}
-    request.session["session"] = json.dumps(session_data)
-    redis_client.hset(session_key, session_id, json.dumps(session_data))
+    request.session["token"] = jwt.encode(
+        session_data, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
     return request, session_id
 
 

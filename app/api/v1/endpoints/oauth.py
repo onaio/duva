@@ -2,22 +2,19 @@
 from datetime import timedelta
 import json
 from typing import Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
-import httpx
 import redis
 from fastapi import Depends, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
+from app.api.auth_deps import get_current_user
 from app.core.config import settings
 from fastapi.routing import APIRouter
 import sentry_sdk
 
 from app import crud, schemas
 from app.api.deps import get_db, get_redis_client
-from app.common_tags import ONADATA_TOKEN_ENDPOINT, ONADATA_USER_ENDPOINT
 from app.core import onadata, security
-from app.models import Server, User
-from app.utils.auth_utils import IsAuthenticatedUser, create_session
 
 router = APIRouter()
 
@@ -26,7 +23,7 @@ router = APIRouter()
 def login_oauth(
     server_url: str,
     redirect_url: Optional[str] = None,
-    user=Depends(IsAuthenticatedUser(raise_errors=False)),
+    user=Depends(get_current_user),
     db=Depends(get_db),
     redis: redis.Redis = Depends(get_redis_client),
 ):
@@ -41,7 +38,8 @@ def login_oauth(
     resources.
     """
     if not user:
-        server: Optional[schemas.Server] = Server.get_using_url(db, server_url)
+        server_url = urlparse(server_url).geturl()
+        server: Optional[schemas.Server] = crud.server.get_using_url(db, url=server_url)
         if not server:
             raise HTTPException(status_code=400, detail="Server not configured")
         auth_state = {"server_id": server.id}
@@ -62,7 +60,13 @@ def login_oauth(
             },
         )
     else:
-        return RedirectResponse(url=redirect_url or "/", status_code=302)
+        return RedirectResponse(
+            url=redirect_url or "/",
+            status_code=302,
+            headers={
+                "Cache-Control": "no-cache, no-store, revalidate",
+            },
+        )
 
 
 @router.get(
@@ -74,7 +78,7 @@ def login_oauth(
 )
 def callback_oauth(
     db=Depends(get_db),
-    user=Depends(IsAuthenticatedUser(raise_errors=False)),
+    user=Depends(get_current_user),
     redis: redis.Redis = Depends(get_redis_client),
     *,
     request: Request,
@@ -110,7 +114,8 @@ def callback_oauth(
 
     try:
         access_token, refresh_token = security.request_onadata_credentials(server, code)
-        profile = onadata.retrieve_onadata_profile(access_token, server.url)
+        client = onadata.OnaDataAPIClient(server.url, access_token)
+        profile = client.get_user()
     except security.FailedToRequestOnaDataCredentials as e:
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=400, detail=str(e))
@@ -141,6 +146,7 @@ def callback_oauth(
                 request=request,
                 user=user,
                 expires_timedelta=timedelta(minutes=settings.SESSION_EXPIRE_MINUTES),
+                redis_client=redis,
             )
             return RedirectResponse(url=redirect_url, status_code=302)
         return {
