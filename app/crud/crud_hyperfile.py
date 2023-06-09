@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Union
 import sentry_sdk
 
 from sqlalchemy.orm import Session
@@ -12,11 +12,18 @@ from app.libs.s3.client import S3Client
 from app.libs.tableau.client import InvalidConfiguration, TableauClient
 from app.models.hyperfile import HyperFile
 from app.models.user import User
-from app.schemas.hyperfile import FileCreate, FilePatchRequestBody, FileStatusEnum
+from app.schemas.hyperfile import (
+    FileCreate,
+    FilePatchRequestBody,
+    FileStatusEnum,
+    FileUpdate,
+)
 from app.utils.onadata_utils import UnsupportedForm
 
 
-class CRUDHyperFile(CRUDBase[HyperFile, FileCreate, FilePatchRequestBody]):
+class CRUDHyperFile(
+    CRUDBase[HyperFile, FileCreate, Union[FilePatchRequestBody, FileUpdate]]
+):
     def create(self, db: Session, *, obj_in: FileCreate, user: User) -> HyperFile:
         client = OnaDataAPIClient(
             user.server.url, fernet_decrypt(user.access_token), user

@@ -6,11 +6,11 @@ import os
 import sentry_sdk
 from sentry_sdk.integrations.rq import RqIntegration
 
-from app.settings import settings
+from app.core.config import settings
 
 # Init sentry
 if settings.sentry_dsn:
-    sentry_sdk.init(settings.sentry_dsn, integrations=[RqIntegration()])
+    sentry_sdk.init(settings.SENTRY_DSN, integrations=[RqIntegration()])
 
-REDIS_URL = settings.redis_url
+REDIS_URL = settings.REDIS_URL
 QUEUES = [os.environ.get("QUEUE_NAME", "default")]

@@ -4,6 +4,10 @@ import logging
 from typing import List
 from pathlib import Path
 
+from requests.exceptions import RetryError
+from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
+from app.jobs.scheduler import schedule_cron_job
+
 
 from tableauhyperapi import HyperProcess, TableName, Telemetry, TableDefinition, Name
 from app import crud
@@ -73,16 +77,43 @@ def _prep_csv_for_import(csv_path: Path) -> List[TableDefinition.Column]:
     return columns
 
 
+def schedule_import_to_hyper_job(db: Session, hyperfile: HyperFile):
+    """
+    Schedule a job to import CSV Data into a Tableau Hyper database
+    """
+    job = schedule_cron_job(import_to_hyper, [hyperfile.id, False])
+    hyperfile = crud.hyperfile.update(
+        db,
+        db_obj=hyperfile,
+        obj_in={"meta_data": {JOB_ID_METADATA: job.id, SYNC_FAILURES_METADATA: 0}},
+    )
+    return hyperfile
+
+
 def import_to_hyper(hyperfile_id: int, schedule_cron: bool = True):
     """
     Start process to import CSV Data into a Tableau Hyper database
     """
     db = SessionLocal()
     hyperfile = crud.hyperfile.get(db, id=hyperfile_id)
+    if schedule_cron and not hyperfile.meta_data.get(JOB_ID_METADATA):
+        hyperfile = schedule_import_to_hyper_job(db, hyperfile)
 
     with Importer(hyperfile=hyperfile, db=db) as importer:
-        importer.import_csv()
-        # TODO Schedule Cron
+        success = importer.import_csv()
+        if not success:
+            hyperfile = crud.hyperfile.update(
+                db,
+                db_obj=hyperfile,
+                obj_in={
+                    "meta_data": {
+                        SYNC_FAILURES_METADATA: hyperfile.meta_data.get(
+                            SYNC_FAILURES_METADATA, 0
+                        )
+                        + 1
+                    }
+                },
+            )
 
 
 class Importer:
@@ -107,8 +138,17 @@ class Importer:
             user=self.hyperfile.user,
         )
         logger.info(f"{self.unique_id} - Downloading Export")
-        export_path = client.download_export(self.hyperfile)
-        logger.info(f"{self.unique_id} - Export downloaded")
+        try:
+            export_path = client.download_export(self.hyperfile)
+            logger.info(f"{self.unique_id} - Export downloaded")
+        except RetryError as e:
+            logger.info(f"{self.unique_id} - Retry Error: {e}")
+            self.hyperfile = crud.hyperfile.update_status(
+                self.db,
+                obj=self.hyperfile,
+                status=FileStatusEnum.latest_sync_failed,
+            )
+            return False
 
         if export_path:
             logger.info(f"{self.unique_id} - Importing CSV to Hyper")

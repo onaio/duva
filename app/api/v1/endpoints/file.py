@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from app import crud, schemas
 from app.api.auth_deps import get_current_user
 from app.api.deps import get_db
-from app.core.importer import import_to_hyper
+from app.core.importer import import_to_hyper, schedule_import_to_hyper_job
+from app.jobs.scheduler import schedule_cron_job
 from app.models.configuration import Configuration
 from app.models.hyperfile import HyperFile
 from app.models.user import User
@@ -183,9 +184,6 @@ def create_file(
         raise HTTPException(status_code=400, detail=str(e))
 
     if body.sync_immediately:
-        background_tasks.add_task(import_to_hyper, hfile.id)
-    # TODO
-    # background_tasks.add_task(start_csv_import_to_hyper, hfile.id, process)
-    # TODO
-    # Schedule hyper file cron job
+        background_tasks.add_task(import_to_hyper, hfile.id, False)
+    hfile = schedule_import_to_hyper_job(db, hfile)
     return inject_urls(schemas.FileResponseBody.from_orm(hfile), request, hfile)

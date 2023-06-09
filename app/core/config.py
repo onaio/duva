@@ -83,6 +83,10 @@ class Settings(BaseSettings):
     CORS_ALLOW_HEADERS: List[str] = ["*"]
     CORS_MAX_AGE: int = 3600
 
+    # S3 Configurations
+    S3_REGION: str = "eu-west-1"
+    S3_BUCKET: str = "duva"
+
     @validator("CORS_ALLOWED_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
