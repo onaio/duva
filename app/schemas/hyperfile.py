@@ -27,7 +27,6 @@ class FileListItem(BaseModel):
     filename: str
     file_status: FileStatusEnum = FileStatusEnum.file_unavailable
     last_updated: Optional[datetime] = None
-    last_synced: Optional[datetime] = None
     meta_data: Optional[dict] = None
 
     class Config:
@@ -64,7 +63,6 @@ class FileResponseBody(FileBase):
     filename: str
     file_status: FileStatusEnum = FileStatusEnum.file_unavailable
     last_updated: Optional[datetime] = None
-    last_synced: Optional[datetime] = None
     download_url: Optional[str]
     download_url_valid_till: Optional[str]
     configuration_url: Optional[str]

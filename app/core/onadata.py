@@ -74,7 +74,7 @@ class OnaDataAPIClient:
         self.user = user
         self.unique_id = "api-client"
         if user:
-            self.unique_id += f"-{user.id}"
+            self.unique_id += f"-{user.username}"
 
     def _get_headers(self, access_token: str) -> dict:
         headers = {
