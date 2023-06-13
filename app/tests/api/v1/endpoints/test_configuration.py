@@ -1,12 +1,12 @@
 from unittest.mock import patch
 
-from app import schemas
+from app import schemas, crud
 from app.models import Configuration
 from app.tests.test_base import TestBase
 
 
 class TestConfiguration(TestBase):
-    @patch("app.routers.configuration.TableauClient")
+    @patch("app.crud.crud_configuration.TableauClient")
     def _create_configuration(
         self, auth_credentials: dict, mock_client, config_data: dict = None
     ):
@@ -22,12 +22,12 @@ class TestConfiguration(TestBase):
         )
         mock_client.validate_configuration.return_value = True
         response = self.client.post(
-            "/api/v1/configurations", json=config_data, headers=auth_credentials
+            "/api/v1/configurations/", json=config_data, headers=auth_credentials
         )
 
         # Returns a 400 exception when configuration already exists
         resp = self.client.post(
-            "/api/v1/configurations", json=config_data, headers=auth_credentials
+            "/api/v1/configurations/", json=config_data, headers=auth_credentials
         )
         assert resp.status_code == 400
         assert resp.json() == {"detail": "Configuration already exists"}
@@ -37,8 +37,7 @@ class TestConfiguration(TestBase):
         self.db.query(Configuration).delete()
         self.db.commit()
 
-    @patch("app.utils.auth_utils.get_access_token")
-    def test_create_retrieve_config(self, mock_get_access_token, create_user_and_login):
+    def test_create_retrieve_config(self, create_user_and_login):
         _, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
@@ -63,26 +62,22 @@ class TestConfiguration(TestBase):
         assert response.json() == expected_data
         self._cleanup_configs()
 
-    @patch("app.utils.auth_utils.get_access_token")
-    def test_delete_config(self, mock_get_access_token, create_user_and_login):
+    def test_delete_config(self, create_user_and_login):
         _, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
         assert response.status_code == 201
         config_id = response.json().get("id")
-        current_count = len(Configuration.get_all(self.db))
+        current_count = len(crud.configuration.get_multi(self.db))
 
         response = self.client.delete(
             f"/api/v1/configurations/{config_id}", headers=auth_credentials
         )
         assert response.status_code == 204
-        assert len(Configuration.get_all(self.db)) == current_count - 1
+        assert len(crud.configuration.get_multi(self.db)) == current_count - 1
 
-    @patch("app.utils.auth_utils.get_access_token")
-    @patch("app.routers.configuration.TableauClient")
-    def test_patch_config(
-        self, mock_client, mock_get_access_token, create_user_and_login
-    ):
+    @patch("app.crud.crud_configuration.TableauClient")
+    def test_patch_config(self, mock_client, create_user_and_login):
         _, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         response = self._create_configuration(auth_credentials)
@@ -91,7 +86,7 @@ class TestConfiguration(TestBase):
         config_id = response.json().get("id")
         data = schemas.ConfigurationPatchRequest(
             site_name="test_change",
-        ).dict()
+        ).dict(exclude_unset=True)
         expected_data = schemas.ConfigurationResponse(
             site_name="test_change",
             server_address="http://test",

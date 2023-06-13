@@ -8,7 +8,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
 from app.models import HyperFile
 from app.schemas import FileCreate, FileStatusEnum
-from app.settings import settings
+from app.core.config import settings
 from app.tests.test_base import TestBase
 from app.utils.hyper_utils import (
     cancel_hyper_file_job,

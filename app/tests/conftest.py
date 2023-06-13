@@ -31,6 +31,9 @@ app.dependency_overrides[get_redis_client] = override_get_redis_client
 @pytest.fixture(scope="function")
 def create_user_and_login():
     db = TestingSessionLocal()
+    if prev_server := crud.server.get_using_url(db, url="http://testserver"):
+        crud.server.delete(db, id=prev_server.id)
+
     server = crud.server.create(
         db,
         obj_in=schemas.ServerCreate(
