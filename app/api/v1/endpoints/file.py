@@ -1,11 +1,12 @@
 from typing import List, Optional
 from urllib.parse import urljoin
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
 from app.api.auth_deps import get_current_user
-from app.api.deps import get_db
+from app.api.deps import get_db, get_redis_client
 from app.core.importer import import_to_hyper, schedule_import_to_hyper_job
 from app.models.configuration import Configuration
 from app.models.hyperfile import HyperFile
@@ -127,6 +128,47 @@ def delete_file(
         crud.hyperfile.delete(db=db, id=file_id)
     else:
         raise HTTPException(status_code=404, detail="File not found.")
+
+
+@router.post("/{file_id}/sync")
+def sync_file(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    *,
+    background_tasks: BackgroundTasks,
+    file_id: int,
+):
+    """
+    Trigger a sync task for a specific Hyper File
+    """
+    hyper_file = crud.hyperfile.get(db=db, id=file_id)
+
+    if not hyper_file:
+        raise HTTPException(404, "File not found.")
+
+    if hyper_file.configuration and not crud.configuration.validate(
+        obj=hyper_file.configuration
+    ):
+        raise HTTPException(
+            400,
+            detail=f"Invalid configuration ID {hyper_file.configuration.id}",
+        )
+
+    if hyper_file.user_id == user.id:
+        status_code = 200
+        if hyper_file.file_status not in [
+            schemas.FileStatusEnum.queued,
+            schemas.FileStatusEnum.syncing,
+        ]:
+            background_tasks.add_task(import_to_hyper, hyper_file.id, False)
+        else:
+            status_code = 202
+
+        return JSONResponse(
+            {"message": "File syncing is currently on-going"}, status_code=status_code
+        )
+    else:
+        raise HTTPException(401)
 
 
 # TODO Add import route
