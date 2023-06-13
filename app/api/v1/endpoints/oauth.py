@@ -2,7 +2,7 @@
 from datetime import timedelta
 import json
 from typing import Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 import redis
 from fastapi import Depends, HTTPException, Request
@@ -126,7 +126,7 @@ def callback_oauth(
         raise HTTPException(status_code=502, detail=str(e))
     else:
         username = profile["username"]
-        user = crud.user.get_by_username(db, username=username)
+        user = crud.user.get_by_username(db, username=username, server_id=server.id)
         if not user:
             user_in = schemas.UserCreate(
                 username=username,
