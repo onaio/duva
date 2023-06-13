@@ -22,9 +22,6 @@ class Settings(BaseSettings):
     SESSION_EXPIRE_MINUTES: int = 60 * 24 * 14
     DOWNLOAD_EXPIRE_SECONDS: int = 3600
 
-    FIRST_SUPERUSER: str = "admin@duva.ona.io"
-    FIRST_SUPERUSER_PASSWORD: str = "admin"
-
     POSTGRES_SERVER: str = "postgres"
     POSTGRES_USER: str = "duva"
     POSTGRES_PASSWORD: str = "duva"
