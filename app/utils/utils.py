@@ -1,4 +1,7 @@
-# Common/General Utilities
+"""
+DEPRECATED: This file is no longer used. It is kept for reference purposes only.
+Please utilize api/deps.py instead.
+"""
 import redis
 
 from app.database import SessionLocal
