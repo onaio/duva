@@ -33,7 +33,7 @@ target_metadata = Base.metadata
 def get_url():
     user = os.getenv("POSTGRES_USER", "duva")
     password = os.getenv("POSTGRES_PASSWORD", "duva")
-    server = os.getenv("POSTGRES_SERVER", "127.0.0.1")
+    server = os.getenv("POSTGRES_SERVER", "postgres")
     db = os.getenv("POSTGRES_DB", "duva")
     return f"postgresql://{user}:{password}@{server}/{db}"
 

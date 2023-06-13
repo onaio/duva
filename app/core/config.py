@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     APP_PORT: int = 8000
     MEDIA_ROOT: str = "/app/media"
     DEBUG: bool = False
-    SECRET_KEY: str  # Fernet.generate_key().decode()
+    SECRET_KEY: str = Fernet.generate_key().decode()
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = (
         60 * 24 * 7
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: str = "admin@duva.ona.io"
     FIRST_SUPERUSER_PASSWORD: str = "admin"
 
-    POSTGRES_SERVER: str = "127.0.0.1"
+    POSTGRES_SERVER: str = "postgres"
     POSTGRES_USER: str = "duva"
     POSTGRES_PASSWORD: str = "duva"
     POSTGRES_DB: str = "duva"
@@ -51,9 +51,9 @@ class Settings(BaseSettings):
             return None
         return v
 
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_DB: int
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
     REDIS_PASSWORD: Optional[str] = None
     REDIS_USERNAME: Optional[str] = None
     REDIS_URL: Optional[RedisDsn] = None
