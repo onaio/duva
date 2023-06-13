@@ -1,9 +1,10 @@
+from IPython.core.debugger import exception_colors
 from sqlalchemy.orm import Session
 from typing import Union
-import tableauserverclient as TSC
 
 from app.core.security import fernet_decrypt, fernet_encrypt
 from app.crud.base import CRUDBase
+from app.libs.tableau.client import TableauClient
 from app.models.configuration import Configuration
 from app.schemas.configuration import ConfigurationCreate, ConfigurationPatchRequest
 
@@ -19,7 +20,7 @@ class CRUDConfiguration(
             token_value=fernet_encrypt(obj_in.token_value),
             project_name=obj_in.project_name,
             user_id=obj_in.user_id,
-            export_settings=obj_in.export_settings,
+            export_settings=obj_in.export_settings.dict(exclude_unset=True),
         )
         db.add(configuration_obj)
         db.commit()
@@ -34,7 +35,7 @@ class CRUDConfiguration(
         else:
             update_data = obj_in.dict(exclude_unset=True)
 
-        if update_data["token_value"]:
+        if update_data.get("token_value"):
             update_data["token_value"] = fernet_encrypt(update_data["token_value"])
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
@@ -43,19 +44,8 @@ class CRUDConfiguration(
         *,
         obj: Union[Configuration, ConfigurationCreate, ConfigurationPatchRequest]
     ):
-        if isinstance(obj, Configuration):
-            token = fernet_decrypt(obj.token_value)
-        else:
-            token = obj.token_value
-
-        auth = TSC.PersonalAccessTokenAuth(
-            token_name=obj.token_name,
-            personal_access_token=token,
-            site_id=obj.site_name,
-        )
         try:
-            server = TSC.Server(obj.server_address, use_server_version=True)
-            server.auth.sign_in(auth)
+            TableauClient.validate_configuration(obj)
         except Exception:
             return False
         else:
