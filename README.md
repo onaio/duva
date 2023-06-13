@@ -91,3 +91,17 @@ $ ./scripts/run-tests.sh
 ```sh
 $ PYTHONPATH=. pytest -s app/tests
 ```
+
+### FAQ
+
+1. How do I access the shell for the application ?
+
+> The application shell can be accessed via `python3`. You can import the crud module to perform any C.R.U.D(Create, Read, Update & Delete) actions on the models
+
+2. What handles the authentication ?
+
+> Authentication is handled via the functions in `app/api/auth_deps.py`. The `onadata` module contains a helper class used to keep OAuth2 Credentials valid.
+
+3. How do I go about adding an extra field in responses ?
+
+> All responses returned by the application are managed using pydantic schemas. In case you'd like to modify a response ensure the field exists in the model and update the `schemas` module
