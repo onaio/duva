@@ -2,10 +2,10 @@ import fakeredis
 import pytest
 
 from app.main import app
-from app.tests.test_base import TestingSessionLocal
-from app.utils.utils import get_db, get_redis_client
-
-TEST_REDIS_SERVER = fakeredis.FakeServer()
+from app import crud, schemas
+from app.core import security
+from app.tests.test_base import TestingSessionLocal, TEST_REDIS_SERVER
+from app.api.deps import get_db, get_redis_client
 
 
 def override_get_db():
@@ -30,36 +30,32 @@ app.dependency_overrides[get_redis_client] = override_get_redis_client
 
 @pytest.fixture(scope="function")
 def create_user_and_login():
-    from app import schemas
-    from app.models import Server, User
-    from app.utils.auth_utils import create_session
-
     db = TestingSessionLocal()
-    redis_client = fakeredis.FakeRedis(server=TEST_REDIS_SERVER)
-    server = Server.create(
+    server = crud.server.create(
         db,
-        schemas.ServerCreate(
+        obj_in=schemas.ServerCreate(
             url="http://testserver",
             client_id="some_client_id",
             client_secret="some_secret_value",
         ),
     )
-    if User.get_using_username(db, "bob"):
-        db.query(User).filter(User.username == "bob").delete()
-        db.commit()
 
-    user = User.create(
+    if prev_user := crud.user.get_by_username(db, username="bob", server_id=server.id):
+        crud.user.delete(db, id=prev_user.id)
+
+    user = crud.user.create(
         db,
-        schemas.User(
-            username="bob", refresh_token="somes3cr3tvalu3", server_id=server.id
+        obj_in=schemas.UserCreate(
+            username="bob",
+            refresh_token="somes3cr3tvalu3",
+            access_token="somes3cr3valu3",
+            server_id=server.id,
         ),
     )
 
-    _, bearer_token = create_session(user, redis_client)
+    bearer_token = security.create_access_token(user.id)
     yield user, bearer_token
 
     # Clean up created objects
-    db.query(User).filter(User.id == user.id).delete()
-    db.query(Server).filter(Server.id == server.id).delete()
-    db.commit()
-    db.close()
+    crud.user.delete(db, id=user.id)
+    crud.server.delete(db, id=server.id)
