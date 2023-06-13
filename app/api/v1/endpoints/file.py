@@ -7,8 +7,6 @@ from app import crud, schemas
 from app.api.auth_deps import get_current_user
 from app.api.deps import get_db
 from app.core.importer import import_to_hyper, schedule_import_to_hyper_job
-from app.jobs.scheduler import schedule_cron_job
-from app.models import hyperfile
 from app.models.configuration import Configuration
 from app.models.hyperfile import HyperFile
 from app.models.user import User
@@ -98,6 +96,15 @@ def update_file(
     Update a specific Hyper File
     """
     file = crud.hyperfile.get(db=db, id=file_id)
+    if body.configuration_id:
+        configuration: Optional[Configuration] = crud.configuration.get(
+            db, id=body.configuration_id
+        )
+        if not configuration or not configuration.user_id == user.id:
+            raise HTTPException(
+                status_code=400, detail="Configuration not found with given ID"
+            )
+
     if file and file.user_id == user.id:
         file = crud.hyperfile.update(db=db, db_obj=file, obj_in=body)
         return inject_urls(schemas.FileResponseBody.from_orm(file), request, file)
@@ -172,7 +179,7 @@ def create_file(
         )
         if not configuration or not configuration.user_id == user.id:
             raise HTTPException(
-                status_code=404, detail="Configuration not found with given ID"
+                status_code=400, detail="Configuration not found with given ID"
             )
         create_data.configuration_id = body.configuration_id
 
@@ -183,5 +190,5 @@ def create_file(
 
     if body.sync_immediately:
         background_tasks.add_task(import_to_hyper, hfile.id, False)
-    hfile = schedule_import_to_hyper_job(db, hfile)
+    schedule_import_to_hyper_job(db, hfile)
     return inject_urls(schemas.FileResponseBody.from_orm(hfile), request, hfile)
