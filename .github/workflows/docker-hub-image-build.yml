@@ -40,7 +40,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile.prod
+          file: ./Dockerfile
           platforms: linux/amd64
           build-args: |
             release_version=${{ github.event.inputs.versionTag || steps.get_version.outputs.VERSION }}
