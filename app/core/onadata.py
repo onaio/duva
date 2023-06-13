@@ -48,6 +48,9 @@ def write_export_to_temp_file(export_url, client, retry: int = 0):
 
 
 class OnaDataAPIClient:
+    """
+    Client for interacting with the OnaData API
+    """
     def __init__(
         self,
         base_url: str,

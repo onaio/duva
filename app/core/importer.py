@@ -112,13 +112,19 @@ def import_to_hyper(hyperfile_id: int, schedule_cron: bool = True):
 
 
 class Importer:
+    """
+    Class used to import CSV Data from Onadata into a Tableau Hyper database.
+    """
     def __init__(self, hyperfile: HyperFile, db: Session):
         self.hyperfile = hyperfile
         self.db = db
         self.unique_id = f"{self.hyperfile.id}-{self.hyperfile.filename}"
 
     def __enter__(self):
-        self.process = HyperProcess(telemetry=Telemetry.SEND_USAGE_DATA_TO_TABLEAU)
+        return self.start_import()
+
+    def start_import(self):
+        self.process = HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU)
         return self
 
     def import_csv(self):
@@ -202,4 +208,7 @@ class Importer:
             return count
 
     def __exit__(self, *args):
+        self.stop_process()
+    
+    def stop_process(self):
         self.process.close()
