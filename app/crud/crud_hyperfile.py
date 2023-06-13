@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
 from typing import List, Union
-import sentry_sdk
 
+import sentry_sdk
 from sqlalchemy.orm import Session
+
 from app.common_tags import JOB_ID_METADATA
+from app.core.config import settings
 from app.core.onadata import FailedExternalRequest, OnaDataAPIClient
 from app.core.security import fernet_decrypt
-
 from app.crud.base import CRUDBase
-from app.core.config import settings
 from app.jobs.scheduler import cancel_job
 from app.libs.s3.client import S3Client
 from app.libs.tableau.client import InvalidConfiguration, TableauClient

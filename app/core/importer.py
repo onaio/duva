@@ -1,24 +1,12 @@
 # Module containing the Importer class
 # Used to import CSV Data into a Hyper Database
 import logging
-from typing import List
-from pathlib import Path
-
-from requests.exceptions import RetryError
-from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
-from app.jobs.scheduler import schedule_cron_job
-
-
-from tableauhyperapi import HyperProcess, TableName, Telemetry, TableDefinition, Name
-from app import crud
-from app.core.onadata import OnaDataAPIClient
-from app.core.security import fernet_decrypt
-from app.models.hyperfile import HyperFile
 from pathlib import Path
 from typing import List
 
 import pandas as pd
 from pandas.errors import EmptyDataError
+from requests.exceptions import RetryError
 from sqlalchemy.orm.session import Session
 from tableauhyperapi import (
     Connection,
@@ -28,11 +16,18 @@ from tableauhyperapi import (
     SqlType,
     TableDefinition,
     TableName,
+    Telemetry,
     escape_string_literal,
 )
 
+from app import crud
+from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
+from app.core.onadata import OnaDataAPIClient
+from app.core.security import fernet_decrypt
 from app.database.session import SessionLocal
+from app.jobs.scheduler import schedule_cron_job
 from app.models import HyperFile
+from app.models.hyperfile import HyperFile
 from app.schemas import FileStatusEnum
 
 logger = logging.getLogger("importer")

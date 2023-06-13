@@ -33,7 +33,6 @@ from app.libs.s3.client import S3Client
 from app.libs.tableau.client import TableauClient
 from app.models import Configuration, HyperFile
 from app.schemas import FileStatusEnum
-from app.settings import settings
 
 
 def element_type_to_hyper_sql_type(elem_type: str) -> SqlType:
@@ -250,7 +249,7 @@ def handle_hyper_file_job_completion(
         if failure_reason:
             metadata[FAILURE_REASON_METADATA] = failure_reason
 
-        if failure_count >= settings.job_failure_limit and hf.is_active:
+        if failure_count >= 3 and hf.is_active:
             cancel_hyper_file_job(
                 hyperfile_id,
                 metadata.get(job_id_meta_tag),

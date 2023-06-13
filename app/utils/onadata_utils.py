@@ -23,9 +23,9 @@ from app.common_tags import (
     ONADATA_FORMS_ENDPOINT,
     ONADATA_TOKEN_ENDPOINT,
 )
+from app.core.config import settings
 from app.database.session import SessionLocal
 from app.models import HyperFile, Server, User
-from app.settings import settings
 from app.utils.hyper_utils import (
     handle_csv_import_to_hyperfile,
     handle_hyper_file_job_completion,
@@ -151,7 +151,7 @@ def get_csv_export(
     """
     bearer_token = get_access_token(user, server, db)
     headers = {
-        "user-agent": f"{settings.app_name}/{settings.app_version}",
+        "user-agent": f"{settings.APP_NAME}/{settings.APP_VERSION}",
         "Authorization": f"Bearer {bearer_token}",
     }
     with httpx.Client(headers=headers) as client:
@@ -189,7 +189,7 @@ def start_csv_import_to_hyper(
     """
     db = SessionLocal()
     redis_client = Redis(
-        host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
+        host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB
     )
     hyperfile: HyperFile = HyperFile.get(db, object_id=hyperfile_id)
     user = User.get(db, hyperfile.user)
@@ -267,7 +267,7 @@ def create_or_get_hyperfile(
     if hyperfile:
         return hyperfile, False
 
-    headers = {"user-agent": f"{settings.app_name}/{settings.app_version}"}
+    headers = {"user-agent": f"{settings.APP_NAME}/{settings.APP_VERSION}"}
     user = User.get(db, file_data.user)
     server = user.server
     bearer_token = get_access_token(user, server, db)

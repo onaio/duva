@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from httpx._models import Response
 
-from app import schemas, crud
+from app import crud, schemas
 from app.tests.test_base import TestBase
 
 

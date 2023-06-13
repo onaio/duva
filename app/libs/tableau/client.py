@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import tableauserverclient as TSC
-from app.core.security import fernet_decrypt
 
+from app.core.security import fernet_decrypt
 from app.models import Configuration
 
 

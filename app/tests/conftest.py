@@ -1,11 +1,11 @@
 import fakeredis
 import pytest
 
-from app.main import app
 from app import crud, schemas
-from app.core import security
-from app.tests.test_base import TestingSessionLocal, TEST_REDIS_SERVER
 from app.api.deps import get_db, get_redis_client
+from app.core import security
+from app.main import app
+from app.tests.test_base import TEST_REDIS_SERVER, TestingSessionLocal
 
 
 def override_get_db():

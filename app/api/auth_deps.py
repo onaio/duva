@@ -1,13 +1,13 @@
 import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
-
 from sqlalchemy.orm import Session
-from app.api.deps import get_db
+
 from app import crud
+from app.api.deps import get_db
+from app.core.config import settings
 from app.models.user import User
 from app.schemas.token import TokenPayload
-from app.core.config import settings
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"/api/v1/oauth/login", auto_error=False

@@ -194,20 +194,19 @@ class TestFileRoute(TestBase):
             ),
         )
         file_data = schemas.FileRequestBody(
-            server_url="http://testserver",
             form_id=1,
-            immediate_sync=False,
+            sync_immediately=False,
             configuration_id=config.id,
-        ).dict()
+        ).dict(exclude_unset=True)
         response = self._create_file(auth_credentials, file_data=file_data)
         response_json = response.json()
         response_json.pop("download_url_valid_till")
+        file_id = response_json.pop("id")
         expected_data = {
             "download_url": "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540",
             "filename": "check_fields.hyper",
             "file_status": schemas.FileStatusEnum.file_unavailable.value,
             "form_id": 1,
-            "id": 1,
             "last_updated": None,
             "configuration_url": f"http://testserver/configurations/{config.id}",
             "meta_data": {"job-id": "", "sync-failures": 0},
@@ -229,9 +228,9 @@ class TestFileRoute(TestBase):
                 token_value="test2",
             ),
         )
-        file_data = schemas.FilePatchRequestBody(configuration_id=config_2.id).dict()
+        file_data = schemas.FilePatchRequestBody(configuration_id=config_2.id).dict(exclude_unset=True)
         response = self.client.patch(
-            "/api/v1/files/1", json=file_data, headers=auth_credentials
+            f"/api/v1/files/{file_id}", json=file_data, headers=auth_credentials
         )
         assert response.status_code == 200
         response_json = response.json()
@@ -294,7 +293,10 @@ class TestFileRoute(TestBase):
 
     @patch("app.api.v1.endpoints.file.crud.hyperfile.get_download_links")
     def test_file_get(self, mock_presigned_create, create_user_and_login):
-        mock_presigned_create.return_value = "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540", "1609838540"
+        mock_presigned_create.return_value = (
+            "https://testing.s3.amazonaws.com/1/bob/check_fields.hyper?AWSAccessKeyId=key&Signature=sig&Expires=1609838540",
+            "1609838540",
+        )
         user, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
         self._create_file(auth_credentials)
@@ -318,9 +320,7 @@ class TestFileRoute(TestBase):
         assert list(response.json().keys()) == expected_keys
         assert response.json()["id"] == hyperfile.id
 
-    def test_file_get_raises_error_on_invalid_id(
-        self, create_user_and_login
-    ):
+    def test_file_get_raises_error_on_invalid_id(self, create_user_and_login):
         _, jwt = create_user_and_login
         auth_credentials = {"Authorization": f"Bearer {jwt}"}
 

@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
-from cryptography.fernet import Fernet
 
+from cryptography.fernet import Fernet
 from pydantic import AnyHttpUrl, BaseSettings, HttpUrl, PostgresDsn, RedisDsn, validator
 
 

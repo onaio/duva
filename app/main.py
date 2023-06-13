@@ -1,5 +1,5 @@
-from logging.config import dictConfig
 import os
+from logging.config import dictConfig
 
 import sentry_sdk
 from fastapi import Depends, FastAPI, Request

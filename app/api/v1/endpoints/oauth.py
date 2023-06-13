@@ -1,21 +1,21 @@
 # Routes for the OAuth (/oauth) endpoint
-from datetime import timedelta
 import json
+from datetime import timedelta
 from typing import Optional
 from urllib.parse import urljoin
 
 import redis
+import sentry_sdk
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from starlette.datastructures import URL
-from app.api.auth_deps import get_current_user
-from app.core.config import settings
 from fastapi.routing import APIRouter
-import sentry_sdk
+from starlette.datastructures import URL
 
 from app import crud, schemas
+from app.api.auth_deps import get_current_user
 from app.api.deps import get_db, get_redis_client
 from app.core import onadata, security
+from app.core.config import settings
 
 router = APIRouter()
 

@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from app import schemas, crud
+from app import crud, schemas
 from app.models import Configuration
 from app.tests.test_base import TestBase
 

@@ -4,7 +4,7 @@ Please utilize api/deps.py instead.
 """
 import redis
 
-from app.database import SessionLocal
+from app.database.session import SessionLocal
 from app.settings import settings
 
 

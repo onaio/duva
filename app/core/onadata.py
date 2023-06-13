@@ -1,25 +1,24 @@
 import logging
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from time import sleep
 from urllib.parse import urljoin
+
+import httpx
 import requests
-from pathlib import Path
 from requests.sessions import HTTPAdapter
 from urllib3.util.retry import Retry
 
-import httpx
 from app import crud, schemas
-
 from app.common_tags import (
     ONADATA_FORMS_ENDPOINT,
-    ONADATA_USER_ENDPOINT,
     ONADATA_TOKEN_ENDPOINT,
+    ONADATA_USER_ENDPOINT,
 )
-from app.database.session import SessionLocal
 from app.core.config import settings
 from app.core.security import fernet_decrypt
+from app.database.session import SessionLocal
 from app.models.hyperfile import HyperFile
-
 
 COMMON_HEADERS = {"User-Agent": f"{settings.APP_NAME}/{settings.APP_VERSION}"}
 

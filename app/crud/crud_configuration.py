@@ -1,6 +1,7 @@
+from typing import Union
+
 from IPython.core.debugger import exception_colors
 from sqlalchemy.orm import Session
-from typing import Union
 
 from app.core.security import fernet_decrypt, fernet_encrypt
 from app.crud.base import CRUDBase
