@@ -85,10 +85,11 @@ def create_session(
 def create_access_token(
     subject: Union[str, Any], expires_delta: Optional[timedelta] = None
 ) -> str:
+    data = {"sub": str(subject)}
     expire = None
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
+        data["exp"] = expire
 
-    data = {"sub": str(subject), "exp": expire}
     encoded_jwt = jwt.encode(data, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
