@@ -1,9 +1,8 @@
 from unittest.mock import PropertyMock, patch
 
-from httpx._models import Response
 
 from app import crud, schemas
-from app.models import Configuration, HyperFile
+from app.models import Configuration
 from app.tests.test_base import TestBase
 
 
@@ -228,7 +227,9 @@ class TestFileRoute(TestBase):
                 token_value="test2",
             ),
         )
-        file_data = schemas.FilePatchRequestBody(configuration_id=config_2.id).dict(exclude_unset=True)
+        file_data = schemas.FilePatchRequestBody(configuration_id=config_2.id).dict(
+            exclude_unset=True
+        )
         response = self.client.patch(
             f"/api/v1/files/{file_id}", json=file_data, headers=auth_credentials
         )

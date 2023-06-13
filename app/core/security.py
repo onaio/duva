@@ -7,10 +7,9 @@ from uuid import uuid4
 import httpx
 import jwt
 from cryptography.fernet import Fernet
-from fastapi import Depends, Request
+from fastapi import Request
 from passlib.context import CryptContext
 
-from app.api.deps import get_redis_client
 from app.common_tags import ONADATA_TOKEN_ENDPOINT
 from app.core.config import settings
 from app.models.server import Server

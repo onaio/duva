@@ -9,9 +9,7 @@ from app.core.config import settings
 from app.models.user import User
 from app.schemas.token import TokenPayload
 
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"/api/v1/oauth/login", auto_error=False
-)
+reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/oauth/login", auto_error=False)
 
 
 def get_current_user(

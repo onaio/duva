@@ -50,7 +50,7 @@ class CRUDHyperFile(
         return super().create(db, obj_in=obj_in)
 
     def get_active(self, db: Session) -> List[HyperFile]:
-        return db.query(self.model).filter(self.model.is_active == True).all()
+        return db.query(self.model).filter(self.model.is_active == True).all()  # noqa
 
     def get_using_form(
         self, db: Session, *, form_id: str, user_id: str

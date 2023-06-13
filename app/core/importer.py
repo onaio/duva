@@ -27,7 +27,6 @@ from app.core.security import fernet_decrypt
 from app.database.session import SessionLocal
 from app.jobs.scheduler import schedule_cron_job
 from app.models import HyperFile
-from app.models.hyperfile import HyperFile
 from app.schemas import FileStatusEnum
 
 logger = logging.getLogger("importer")
@@ -115,6 +114,7 @@ class Importer:
     """
     Class used to import CSV Data from Onadata into a Tableau Hyper database.
     """
+
     def __init__(self, hyperfile: HyperFile, db: Session):
         self.hyperfile = hyperfile
         self.db = db
@@ -124,7 +124,9 @@ class Importer:
         return self.start_import()
 
     def start_import(self):
-        self.process = HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU)
+        self.process = HyperProcess(
+            telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU
+        )
         return self
 
     def import_csv(self):
@@ -209,6 +211,6 @@ class Importer:
 
     def __exit__(self, *args):
         self.stop_process()
-    
+
     def stop_process(self):
         self.process.close()

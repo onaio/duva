@@ -1,12 +1,9 @@
 from typing import Generator
 
 import redis
-from fastapi.security import OAuth2PasswordBearer
 
 from app.core.config import settings
 from app.database.session import SessionLocal
-
-reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"/api/v1/login/access-token")
 
 
 def get_db() -> Generator:

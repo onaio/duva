@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-from httpx._models import Response
 
 from app import crud, schemas
 from app.tests.test_base import TestBase
@@ -43,7 +42,7 @@ class TestOAuthRoute(TestBase):
         assert response.status_code == 400
         assert response.json() == {"detail": "Server not configured"}
 
-        mock_create_auth_state.return_value = "some_uuid", f'{{"server_id": 1}}'
+        mock_create_auth_state.return_value = "some_uuid", '{{"server_id": 1}}'
         response = self.client.get("/api/v1/oauth/login?server_url=http://testserver")
         assert (
             response.url

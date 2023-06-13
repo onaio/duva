@@ -1,9 +1,8 @@
 from typing import Union
 
-from IPython.core.debugger import exception_colors
 from sqlalchemy.orm import Session
 
-from app.core.security import fernet_decrypt, fernet_encrypt
+from app.core.security import fernet_encrypt
 from app.crud.base import CRUDBase
 from app.libs.tableau.client import InvalidConfiguration, TableauClient
 from app.models.configuration import Configuration

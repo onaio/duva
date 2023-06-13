@@ -51,6 +51,7 @@ class OnaDataAPIClient:
     """
     Client for interacting with the OnaData API
     """
+
     def __init__(
         self,
         base_url: str,

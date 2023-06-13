@@ -1,13 +1,9 @@
 # Schema Definitions
-from datetime import datetime
-from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
 
-from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
-
-from .configuration import (
+from .configuration import (  # noqa
     Configuration,
     ConfigurationCreate,
     ConfigurationCreateRequest,
@@ -16,7 +12,7 @@ from .configuration import (
     ConfigurationResponse,
     ExportConfigurationSettings,
 )
-from .hyperfile import (
+from .hyperfile import (  # noqa
     File,
     FileCreate,
     FileListItem,
@@ -25,9 +21,9 @@ from .hyperfile import (
     FileResponseBody,
     FileStatusEnum,
 )
-from .server import Server, ServerCreate, ServerResponse, ServerUpdate
-from .token import Token, TokenPayload
-from .user import User, UserBearerTokenResponse, UserCreate, UserUpdate
+from .server import Server, ServerCreate, ServerResponse, ServerUpdate  # noqa
+from .token import Token, TokenPayload  # noqa
+from .user import User, UserBearerTokenResponse, UserCreate, UserUpdate  # noqa
 
 
 class EventResponse(BaseModel):
