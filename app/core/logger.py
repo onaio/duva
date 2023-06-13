@@ -1,3 +1,6 @@
+"""
+Logging configuration to be set for the server
+"""
 from pydantic import BaseModel
 
 

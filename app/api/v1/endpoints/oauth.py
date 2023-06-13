@@ -7,6 +7,7 @@ from urllib.parse import urljoin, urlparse
 import redis
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
+from starlette.datastructures import URL
 from app.api.auth_deps import get_current_user
 from app.core.config import settings
 from fastapi.routing import APIRouter
@@ -38,7 +39,8 @@ def login_oauth(
     resources.
     """
     if not user:
-        server_url = urlparse(server_url).geturl()
+        url = URL(server_url)
+        server_url = urljoin(f"{url.scheme}://{url.netloc}", url.path)
         server: Optional[schemas.Server] = crud.server.get_using_url(db, url=server_url)
         if not server:
             raise HTTPException(status_code=400, detail="Server not configured")

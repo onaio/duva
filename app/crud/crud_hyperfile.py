@@ -32,6 +32,7 @@ class CRUDHyperFile(
             cancel_job(obj.meta_data.get(JOB_ID_METADATA))
 
         return super().delete(db, id=id)
+
     def create(self, db: Session, *, obj_in: FileCreate, user: User) -> HyperFile:
         client = OnaDataAPIClient(
             user.server.url, fernet_decrypt(user.access_token), user

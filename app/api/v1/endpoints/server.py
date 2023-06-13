@@ -27,7 +27,7 @@ def create_server_object(server: schemas.ServerCreate, db=Depends(get_db)):
     url = URL(server.url)
     if not url.scheme or not url.netloc:
         raise HTTPException(status_code=400, detail=f"Invalid url {server.url}")
-    server.url = urljoin(f"{url.scheme}://{url.netloc}", "/")
+    server.url = urljoin(f"{url.scheme}://{url.netloc}", url.path)
     if crud.server.get_using_url(db, url=server.url):
         raise HTTPException(
             status_code=400, detail=f"Server {server.url} already configured."
