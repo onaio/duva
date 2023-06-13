@@ -4,7 +4,7 @@ from typing import Union
 
 from app.core.security import fernet_decrypt, fernet_encrypt
 from app.crud.base import CRUDBase
-from app.libs.tableau.client import TableauClient
+from app.libs.tableau.client import InvalidConfiguration, TableauClient
 from app.models.configuration import Configuration
 from app.schemas.configuration import ConfigurationCreate, ConfigurationPatchRequest
 
@@ -46,7 +46,7 @@ class CRUDConfiguration(
     ):
         try:
             TableauClient.validate_configuration(obj)
-        except Exception:
+        except InvalidConfiguration:
             return False
         else:
             return True
