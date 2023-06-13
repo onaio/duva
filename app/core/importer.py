@@ -167,7 +167,7 @@ class Importer:
                 self.hyperfile = crud.hyperfile.update_status(
                     self.db,
                     obj=self.hyperfile,
-                    status=FileStatusEnum.latest_sync_failed,
+                    status=FileStatusEnum.file_available,
                 )
                 logger.info(f"{self.unique_id} - Imported and synced successfully")
                 return True
@@ -200,10 +200,10 @@ class Importer:
             connection.catalog.create_table(extract_table)
 
             command = (
-                f"COPY {table_name} FROM {escape_string_literal(str(export_path))} WITH",
-                f"(format csv, NULL '{null_field}', delimiter '{delimiter}', header)",
+                f"COPY {table_name} FROM {escape_string_literal(str(export_path))} WITH"
+                f"(format csv, NULL '{null_field}', delimiter '{delimiter}', header)"
             )
-            count = connection.execute_command(command)
+            count = connection.execute_command(command=command)
             return count
 
     def __exit__(self, *args):

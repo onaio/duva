@@ -3,11 +3,13 @@ from typing import List, Union
 import sentry_sdk
 
 from sqlalchemy.orm import Session
+from app.common_tags import JOB_ID_METADATA
 from app.core.onadata import FailedExternalRequest, OnaDataAPIClient
 from app.core.security import fernet_decrypt
 
 from app.crud.base import CRUDBase
 from app.core.config import settings
+from app.jobs.scheduler import cancel_job
 from app.libs.s3.client import S3Client
 from app.libs.tableau.client import InvalidConfiguration, TableauClient
 from app.models.hyperfile import HyperFile
@@ -24,6 +26,12 @@ from app.utils.onadata_utils import UnsupportedForm
 class CRUDHyperFile(
     CRUDBase[HyperFile, FileCreate, Union[FilePatchRequestBody, FileUpdate]]
 ):
+    def delete(self, db: Session, *, id: int) -> HyperFile:
+        obj = self.get(db, id=id)
+        if obj.meta_data.get(JOB_ID_METADATA):
+            cancel_job(obj.meta_data.get(JOB_ID_METADATA))
+
+        return super().delete(db, id=id)
     def create(self, db: Session, *, obj_in: FileCreate, user: User) -> HyperFile:
         client = OnaDataAPIClient(
             user.server.url, fernet_decrypt(user.access_token), user

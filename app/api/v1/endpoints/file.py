@@ -8,6 +8,7 @@ from app.api.auth_deps import get_current_user
 from app.api.deps import get_db
 from app.core.importer import import_to_hyper, schedule_import_to_hyper_job
 from app.jobs.scheduler import schedule_cron_job
+from app.models import hyperfile
 from app.models.configuration import Configuration
 from app.models.hyperfile import HyperFile
 from app.models.user import User
@@ -26,10 +27,7 @@ def inject_urls(
         url,
         api_router.url_path_for("get_configuration", config_id=file.configuration_id),
     )
-    download_url, download_url_expires = (
-        "",
-        "",
-    )  # crud.hyperfile.get_download_links(obj=file)
+    download_url, download_url_expires = crud.hyperfile.get_download_links(obj=file)
     resp.configuration_url = configuration_url
     resp.download_url = download_url
     resp.download_url_valid_till = download_url_expires
