@@ -31,6 +31,8 @@ class CRUDHyperFile(
         if obj.meta_data.get(JOB_ID_METADATA):
             cancel_job(obj.meta_data.get(JOB_ID_METADATA))
 
+        s3_client = S3Client()
+        s3_client.delete(self.get_file_path(obj=obj))
         return super().delete(db, id=id)
 
     def create(self, db: Session, *, obj_in: FileCreate, user: User) -> HyperFile:
