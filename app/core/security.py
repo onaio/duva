@@ -24,6 +24,9 @@ class FailedToRequestOnaDataCredentials(Exception):
 
 def fernet_encrypt(value: str) -> str:
     """Encrypts a string using Fernet encryption."""
+    if not value:
+        return ""
+
     return (
         Fernet(settings.SECRET_KEY.encode())
         .encrypt(value.encode("utf-8"))
@@ -33,6 +36,9 @@ def fernet_encrypt(value: str) -> str:
 
 def fernet_decrypt(value: str) -> str:
     """Decrypts a string using Fernet key."""
+    if not value:
+        return ""
+
     return (
         Fernet(settings.SECRET_KEY.encode())
         .decrypt(value.encode("utf-8"))

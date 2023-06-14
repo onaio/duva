@@ -23,7 +23,6 @@ router = APIRouter()
 def login_oauth(
     server_url: str,
     redirect_url: Optional[str] = None,
-    user=Depends(get_current_user),
     db=Depends(get_db),
     redis: redis.Redis = Depends(get_redis_client),
 ):
@@ -37,37 +36,28 @@ def login_oauth(
     creation of a user session that will allow the user to access the applications Hyper File
     resources.
     """
-    if not user:
-        url = URL(server_url)
-        server_url = urljoin(f"{url.scheme}://{url.netloc}", url.path)
-        server: Optional[schemas.Server] = crud.server.get_using_url(db, url=server_url)
-        if not server:
-            raise HTTPException(status_code=400, detail="Server not configured")
-        auth_state = {"server_id": server.id}
-        if redirect_url:
-            auth_state["redirect_url"] = redirect_url
+    url = URL(server_url)
+    server_url = urljoin(f"{url.scheme}://{url.netloc}", url.path)
+    server: Optional[schemas.Server] = crud.server.get_using_url(db, url=server_url)
+    if not server:
+        raise HTTPException(status_code=400, detail="Server not configured")
+    auth_state = {"server_id": server.id}
+    if redirect_url:
+        auth_state["redirect_url"] = redirect_url
 
-        state_key, state = security.create_oauth_state(auth_state)
-        redis.setex(state_key, timedelta(minutes=5), state)
-        url = urljoin(
-            f"{server.url}",
-            f"/o/authorize?client_id={server.client_id}&response_type=code&state={state_key}",
-        )
-        return RedirectResponse(
-            url=url,
-            status_code=302,
-            headers={
-                "Cache-Control": "no-cache, no-store, revalidate",
-            },
-        )
-    else:
-        return RedirectResponse(
-            url=redirect_url or "/",
-            status_code=302,
-            headers={
-                "Cache-Control": "no-cache, no-store, revalidate",
-            },
-        )
+    state_key, state = security.create_oauth_state(auth_state)
+    redis.setex(state_key, timedelta(minutes=5), state)
+    url = urljoin(
+        f"{server.url}",
+        f"/o/authorize?client_id={server.client_id}&response_type=code&state={state_key}",
+    )
+    return RedirectResponse(
+        url=url,
+        status_code=302,
+        headers={
+            "Cache-Control": "no-cache, no-store, revalidate",
+        },
+    )
 
 
 @router.get(
@@ -79,7 +69,6 @@ def login_oauth(
 )
 def callback_oauth(
     db=Depends(get_db),
-    user=Depends(get_current_user),
     redis: redis.Redis = Depends(get_redis_client),
     *,
     request: Request,
@@ -96,9 +85,6 @@ def callback_oauth(
     User sessions last for 2 weeks. After the 2 weeks pass the user needs to re-authorize
     with the application to gain access to the Hyper file API
     """
-    if user:
-        return RedirectResponse(url="/", status_code=302)
-
     auth_state = redis.get(state)
     if not auth_state:
         raise HTTPException(

@@ -40,6 +40,4 @@ def get_current_user(
 
         return user
     else:
-        raise HTTPException(
-            status_code=401, detail="Could not validate credentials"
-        )
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
