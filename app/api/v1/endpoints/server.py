@@ -3,11 +3,10 @@ from typing import List
 from urllib.parse import urljoin
 
 from fastapi import Depends, HTTPException
-from fastapi.routing import APIRouter
 from starlette.datastructures import URL
 
 from app import crud, schemas
-from app.api.deps import get_db
+from app.api.deps import get_db, APIRouter
 
 router = APIRouter()
 

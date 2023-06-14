@@ -8,12 +8,11 @@ import redis
 import sentry_sdk
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from fastapi.routing import APIRouter
 from starlette.datastructures import URL
 
 from app import crud, schemas
 from app.api.auth_deps import get_current_user
-from app.api.deps import get_db, get_redis_client
+from app.api.deps import get_db, get_redis_client, APIRouter
 from app.core import onadata, security
 from app.core.config import settings
 

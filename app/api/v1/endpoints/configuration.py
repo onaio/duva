@@ -4,14 +4,13 @@ from typing import List
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
-from fastapi.routing import APIRouter
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
 from app.api.auth_deps import get_current_user
-from app.api.deps import get_db
+from app.api.deps import get_db, APIRouter
 from app.models import User
 
 router = APIRouter()
