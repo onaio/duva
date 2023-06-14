@@ -1,4 +1,6 @@
-from typing import Generator
+from typing import Generator, Any, Callable
+from fastapi import APIRouter as FastAPIRouter
+from fastapi.types import DecoratedCallable
 
 import redis
 

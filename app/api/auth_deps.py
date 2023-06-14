@@ -31,13 +31,15 @@ def get_current_user(
             if request.session.get("token"):
                 del request.session["token"]
             raise HTTPException(
-                status_code=403, detail="Could not validate credentials"
+                status_code=401, detail="Could not validate credentials"
             )
 
         user = crud.user.get(db, id=token_data.sub)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=401, detail="User not found")
 
         return user
     else:
-        return None
+        raise HTTPException(
+            status_code=401, detail="Could not validate credentials"
+        )
