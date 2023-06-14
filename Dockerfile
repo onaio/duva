@@ -9,5 +9,5 @@ RUN pip install -r requirements.pip
 ARG INSTALL_DEV=false
 RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then pip install -r dev-requirements.pip ; fi"
 
-COPY ./app /app
+COPY . /app
 ENV PYTHONPATH=/app
