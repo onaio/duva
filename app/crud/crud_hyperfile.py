@@ -37,7 +37,9 @@ class CRUDHyperFile(
 
     def create(self, db: Session, *, obj_in: FileCreate, user: User) -> HyperFile:
         client = OnaDataAPIClient(
-            user.server.url, fernet_decrypt(user.access_token), user
+            base_url=user.server.url,
+            access_token=fernet_decrypt(user.access_token),
+            user=user,
         )
         try:
             form_data = client.get_form(obj_in.form_id)

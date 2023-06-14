@@ -69,17 +69,22 @@ class OnaDataAPIClient:
             status_forcelist=status_forcelist,
         )
         adapter = HTTPAdapter(max_retries=retry)
-        self.client = requests.Session()
-        self.client.mount("https://", adapter)
-        self.client.mount("http://", adapter)
-        self.headers = self._get_headers(access_token)
         self.base_url = base_url
         self.user = user
         self.unique_id = "api-client"
         if user:
             self.unique_id += f"-{user.username}"
 
+        self.client = requests.Session()
+        self.client.mount("https://", adapter)
+        self.client.mount("http://", adapter)
+        self.headers = self._get_headers(access_token)
+
     def _get_headers(self, access_token: str) -> dict:
+        if not access_token:
+            self.refresh_access_token()
+            access_token = fernet_decrypt(self.user.access_token)
+
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
