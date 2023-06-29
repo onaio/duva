@@ -11,7 +11,7 @@ import redis
 from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
 
-from app import schemas
+from app import crud, schemas
 from app.api.deps import get_db, get_redis_client
 from app.core.config import settings
 from app.models import User
@@ -82,7 +82,7 @@ class IsAuthenticatedUser:
             session_key = f"{username}-sessions"
 
             if self.is_valid_session(session_id=session_id, session_key=session_key):
-                user = User.get_using_server_and_username(self.db, username, server_id)
+                user = crud.user.get_by_username(self.db, username, server_id)
                 # Validate that the users credentials are still valid on the server
                 if user and get_access_token(user, user.server, self.db):
                     return user

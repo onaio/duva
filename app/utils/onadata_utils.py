@@ -23,6 +23,7 @@ from app.common_tags import (
     ONADATA_FORMS_ENDPOINT,
     ONADATA_TOKEN_ENDPOINT,
 )
+from app import crud
 from app.core.config import settings
 from app.database.session import SessionLocal
 from app.models import HyperFile, Server, User
@@ -75,7 +76,7 @@ def get_access_token(user: User, server: Server, db: SessionLocal) -> Optional[s
     )
     if resp.status_code == 200:
         resp = resp.json()
-        user = User.get(db, user.id)
+        user = crud.user.get(db, user.id)
         user.refresh_token = user.encrypt_value(resp.get("refresh_token"))
         db.commit()
         return resp.get("access_token")
@@ -191,8 +192,8 @@ def start_csv_import_to_hyper(
     redis_client = Redis(
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB
     )
-    hyperfile: HyperFile = HyperFile.get(db, object_id=hyperfile_id)
-    user = User.get(db, hyperfile.user)
+    hyperfile: HyperFile = crud.hyperfile.get(db, object_id=hyperfile_id)
+    user = crud.user.get(db, hyperfile.user_id)
     job_status = schemas.FileStatusEnum.latest_sync_failed.value
     err = None
 
@@ -263,12 +264,12 @@ def start_csv_import_to_hyper_job(hyperfile_id: int, schedule_cron: bool = False
 def create_or_get_hyperfile(
     db: Session, file_data: schemas.FileCreate, process: HyperProcess
 ):
-    hyperfile = HyperFile.get_using_file_create(db, file_data)
+    hyperfile = crud.hyperfile.get_using_form(db, file_data.form_id, file_data.user_id)
     if hyperfile:
         return hyperfile, False
 
     headers = {"user-agent": f"{settings.APP_NAME}/{settings.APP_VERSION}"}
-    user = User.get(db, file_data.user)
+    user = crud.user.get(db, file_data.user)
     server = user.server
     bearer_token = get_access_token(user, server, db)
     headers.update({"Authorization": f"Bearer {bearer_token}"})
@@ -283,7 +284,7 @@ def create_or_get_hyperfile(
 
         title = resp.get("title")
         file_data.filename = f"{title}.hyper"
-        return HyperFile.create(db, file_data), True
+        return crud.hyperfile.create(db, obj_in=file_data, user=user), True
     else:
         raise ConnectionRequestError(
             f"Currently unable to start connection to form. Aggregate status code: {resp.status_code}"
@@ -294,7 +295,7 @@ def schedule_all_active_forms(db: Session = SessionLocal(), close_db: bool = Fal
     """
     Schedule CSV Import Jobs for all active Hyper Files
     """
-    for hf in HyperFile.get_active_files(db):
+    for hf in crud.hyperfile.get_active(db):
         schedule_hyper_file_cron_job(start_csv_import_to_hyper_job, hf.id)
 
     if close_db:
