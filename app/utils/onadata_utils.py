@@ -192,7 +192,7 @@ def start_csv_import_to_hyper(
     redis_client = Redis(
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB
     )
-    hyperfile: HyperFile = crud.hyperfile.get(db, object_id=hyperfile_id)
+    hyperfile: HyperFile = crud.hyperfile.get(db, id=hyperfile_id)
     user = crud.user.get(db, hyperfile.user_id)
     job_status = schemas.FileStatusEnum.latest_sync_failed.value
     err = None

@@ -154,6 +154,7 @@ class OnaDataAPIClient:
 
         logger.info(f"{self.unique_id} - Refreshing access token for user")
         url = urljoin(self.base_url, ONADATA_TOKEN_ENDPOINT)
+        print("CLIENT SECRET", fernet_decrypt(self.user.server.client_secret))
         data = {
             "grant_type": "refresh_token",
             "refresh_token": fernet_decrypt(self.user.refresh_token),

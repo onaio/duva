@@ -20,7 +20,6 @@ from app.schemas.hyperfile import (
     FileStatusEnum,
     FileUpdate,
 )
-from app.utils.onadata_utils import UnsupportedForm
 
 
 class CRUDHyperFile(
@@ -36,6 +35,9 @@ class CRUDHyperFile(
         return super().delete(db, id=id)
 
     def create(self, db: Session, *, obj_in: FileCreate, user: User) -> HyperFile:
+        print("username???", user.username)
+        print("access token??", user.access_token)
+        print("client secret", user.server.client_secret)
         client = OnaDataAPIClient(
             base_url=user.server.url,
             access_token=fernet_decrypt(user.access_token),
@@ -47,7 +49,7 @@ class CRUDHyperFile(
             raise ValueError(f"Error retrieving form {obj_in.form_id}: {e}")
 
         if form_data.get("public_key"):
-            raise UnsupportedForm("Encrypted forms are not supported")
+            raise Exception("Encrypted forms are not supported")
         obj_in.filename = f"{form_data['title']}.hyper"
         return super().create(db, obj_in=obj_in)
 
