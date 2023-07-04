@@ -86,6 +86,7 @@ class CRUDHyperFile(
     def sync_upstreams(self, db: Session, *, obj: HyperFile):
         s3_client = S3Client()
         s3_client.upload(self.get_local_path(obj=obj), self.get_file_path(obj=obj))
+        file_path = self.get_latest_file(obj=obj)
 
         if obj.configuration:
             tableau_client = TableauClient(configuration=obj.configuration)
@@ -95,7 +96,7 @@ class CRUDHyperFile(
                 sentry_sdk.capture_exception(e)
                 pass
             else:
-                tableau_client.publish_hyper(self.get_file_path(obj=obj))
+                tableau_client.publish_hyper(file_path)
         obj.last_updated = datetime.utcnow()
         db.add(obj)
         db.commit()
