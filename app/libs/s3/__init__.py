@@ -1,1 +1,1 @@
-from .client import S3Client # noqa
+from .client import S3Client  # noqa

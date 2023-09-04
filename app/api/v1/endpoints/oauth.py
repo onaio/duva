@@ -85,7 +85,6 @@ def callback_oauth(
     with the application to gain access to the Hyper file API
     """
     auth_state = redis.get(state)
-    print("CODE: ", code)
     if not auth_state:
         raise HTTPException(
             status_code=401, detail="Authorization state can not be confirmed."
@@ -101,8 +100,6 @@ def callback_oauth(
 
     try:
         access_token, refresh_token = security.request_onadata_credentials(server, code)
-        print("ACCESS TOKEN", access_token)
-        print("REFRESH TOKEN", refresh_token)
         client = onadata.OnaDataAPIClient(server.url, access_token)
         profile = client.get_user()
     except security.FailedToRequestOnaDataCredentials as e:

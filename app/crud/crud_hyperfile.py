@@ -35,9 +35,6 @@ class CRUDHyperFile(
         return super().delete(db, id=id)
 
     def create(self, db: Session, *, obj_in: FileCreate, user: User) -> HyperFile:
-        print("username???", user.username)
-        print("access token??", user.access_token)
-        print("client secret", user.server.client_secret)
         client = OnaDataAPIClient(
             base_url=user.server.url,
             access_token=fernet_decrypt(user.access_token),

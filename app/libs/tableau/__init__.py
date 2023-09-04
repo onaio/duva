@@ -1,1 +1,1 @@
-from .client import InvalidConfiguration, TableauClient # noqa
+from .client import InvalidConfiguration, TableauClient  # noqa

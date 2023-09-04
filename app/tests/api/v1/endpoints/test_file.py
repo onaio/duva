@@ -135,7 +135,7 @@ class TestFileRoute(TestBase):
         assert response.status_code == 200
         assert (
             response.json().get("configuration_url")
-            == f"http://testserver/configurations/{configuration.id}"
+            == f"http://testserver/configurations/{configuration.id}/"
         )
 
     def test_file_delete(self, create_user_and_login):
@@ -207,7 +207,7 @@ class TestFileRoute(TestBase):
             "file_status": schemas.FileStatusEnum.file_unavailable.value,
             "form_id": 1,
             "last_updated": None,
-            "configuration_url": f"http://testserver/configurations/{config.id}",
+            "configuration_url": f"http://testserver/configurations/{config.id}/",
             "meta_data": {"job-id": "", "sync-failures": 0},
         }
 
@@ -237,7 +237,7 @@ class TestFileRoute(TestBase):
         response_json = response.json()
         assert (
             response_json.get("configuration_url")
-            == f"http://testserver/configurations/{config_2.id}"
+            == f"http://testserver/configurations/{config_2.id}/"
         )
         # Delete Tableau Configurations
         self.db.query(Configuration).delete()
@@ -254,7 +254,7 @@ class TestFileRoute(TestBase):
         assert len(response.json()) == len(user.hyper_files)
         hyperfile = user.hyper_files[0]
         expected_data = schemas.FileListItem(
-            url=f"http://testserver/{hyperfile.id}",
+            url=f"http://testserver/{hyperfile.id}/",
             id=hyperfile.id,
             form_id=hyperfile.form_id,
             filename=hyperfile.filename,

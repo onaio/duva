@@ -1,1 +1,1 @@
-from .scheduler import UniqueJobScheduler
+from .scheduler import UniqueJobScheduler  # noqa

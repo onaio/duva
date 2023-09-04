@@ -14,7 +14,6 @@ from fastapi.exceptions import HTTPException
 from app import crud, schemas
 from app.api.deps import get_db, get_redis_client
 from app.core.config import settings
-from app.models import User
 from app.utils.onadata_utils import get_access_token
 
 
