@@ -1,5 +1,6 @@
 """
-File containing utility functions related to a Hyper Database / HyperFile
+DEPRECATED: This module is deprecated. It is kept for reference purposes only.
+Please utilize core/importer.py instead.
 """
 from datetime import datetime
 from pathlib import Path
@@ -26,13 +27,13 @@ from app.common_tags import (
     JOB_ID_METADATA,
     SYNC_FAILURES_METADATA,
 )
-from app.database import SessionLocal
+from app import crud
+from app.database.session import SessionLocal
 from app.jobs.scheduler import cancel_job, schedule_cron_job
 from app.libs.s3.client import S3Client
 from app.libs.tableau.client import TableauClient
 from app.models import Configuration, HyperFile
 from app.schemas import FileStatusEnum
-from app.settings import settings
 
 
 def element_type_to_hyper_sql_type(elem_type: str) -> SqlType:
@@ -179,7 +180,7 @@ def schedule_hyper_file_cron_job(
     Schedules a Job that should run on a cron schedule for a particular
     Hyperfile
     """
-    hf: HyperFile = HyperFile.get(db, hyperfile_id)
+    hf: HyperFile = crud.hyperfile.get(db, hyperfile_id)
     metadata = hf.meta_data or {}
 
     job: Job = schedule_cron_job(job_func, [hyperfile_id] + extra_job_args)
@@ -205,7 +206,7 @@ def cancel_hyper_file_job(
     Cancels a scheduler Job related to a Hyper file and resets the job failure
     counter and meta tag
     """
-    hf: HyperFile = HyperFile.get(db, hyperfile_id)
+    hf: HyperFile = crud.hyperfile.get(db, hyperfile_id)
     metadata = hf.meta_data or {}
 
     cancel_job(job_id, [hyperfile_id], job_name)
@@ -231,7 +232,7 @@ def handle_hyper_file_job_completion(
     Handles updating a HyperFile according to the outcome of a running Job; Updates
     file status & tracks the jobs current failure counter.
     """
-    hf: HyperFile = HyperFile.get(db, hyperfile_id)
+    hf: HyperFile = crud.hyperfile.get(db, hyperfile_id)
     metadata = hf.meta_data or {}
 
     if job_succeeded:
@@ -249,7 +250,7 @@ def handle_hyper_file_job_completion(
         if failure_reason:
             metadata[FAILURE_REASON_METADATA] = failure_reason
 
-        if failure_count >= settings.job_failure_limit and hf.is_active:
+        if failure_count >= 3 and hf.is_active:
             cancel_hyper_file_job(
                 hyperfile_id,
                 metadata.get(job_id_meta_tag),

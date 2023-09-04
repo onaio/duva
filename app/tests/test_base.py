@@ -5,10 +5,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
-from app.database import Base
+from app.database.base import Base
 from app.main import app
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+TEST_REDIS_SERVER = fakeredis.FakeServer()
 
 # Delete existing test database
 if os.path.exists("./test.db"):
@@ -27,8 +28,9 @@ class TestBase:
     def setup_class(cls):
         cls.client = TestClient(app=app)
         cls.db = TestingSessionLocal()
-        cls.redis_client = fakeredis.FakeRedis()
+        cls.redis_client = fakeredis.FakeRedis(server=TEST_REDIS_SERVER)
 
     @classmethod
     def teardown_class(cls):
+        cls.redis_client.flushall()
         cls.db.close()

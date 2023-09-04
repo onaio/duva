@@ -2,6 +2,7 @@ from pathlib import Path
 
 import tableauserverclient as TSC
 
+from app.core.security import fernet_decrypt
 from app.models import Configuration
 
 
@@ -13,14 +14,14 @@ class TableauClient:
     def __init__(self, configuration: Configuration):
         self.project_name = configuration.project_name
         self.token_name = configuration.token_name
-        self.token_value = Configuration.decrypt_value(configuration.token_value)
+        self.token_value = fernet_decrypt(configuration.token_value)
         self.site_name = configuration.site_name
         self.server_address = configuration.server_address
 
     @staticmethod
     def validate_configuration(configuration):
         if isinstance(configuration, Configuration):
-            access_token = Configuration.decrypt_value(configuration.token_value)
+            access_token = fernet_decrypt(configuration.token_value)
         else:
             access_token = configuration.token_value
 

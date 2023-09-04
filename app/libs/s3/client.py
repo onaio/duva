@@ -1,7 +1,7 @@
 import boto3
 from botocore.exceptions import ClientError
 
-from app.settings import settings
+from app.core.config import settings
 
 
 class S3Client:
@@ -10,14 +10,14 @@ class S3Client:
 
     """
 
-    s3 = boto3.resource("s3", region_name=settings.s3_region)
+    s3 = boto3.resource("s3", region_name=settings.S3_REGION)
 
     def upload(self, path, file_name):
         """
         uploads file in the given path to s3 with the given filename
         """
         try:
-            self.s3.meta.client.upload_file(path, settings.s3_bucket, file_name)
+            self.s3.meta.client.upload_file(path, settings.S3_BUCKET, file_name)
         except ClientError:
             return False
         return True
@@ -27,7 +27,7 @@ class S3Client:
         Downloads file_name in s3 to path
         """
         try:
-            self.s3.meta.client.download_file(settings.s3_bucket, file_name, path)
+            self.s3.meta.client.download_file(settings.S3_BUCKET, file_name, path)
         except ClientError:
             return False
         return True
@@ -38,7 +38,7 @@ class S3Client:
         """
         try:
             resp = self.s3.meta.client.delete_object(
-                Bucket=settings.s3_bucket, Key=file_path
+                Bucket=settings.S3_BUCKET, Key=file_path
             )
         except ClientError:
             return False
@@ -57,7 +57,7 @@ class S3Client:
         try:
             response = self.s3.meta.client.generate_presigned_url(
                 "get_object",
-                Params={"Bucket": settings.s3_bucket, "Key": file_path},
+                Params={"Bucket": settings.S3_BUCKET, "Key": file_path},
                 ExpiresIn=expiration,
             )
         except ClientError:

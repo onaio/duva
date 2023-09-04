@@ -8,7 +8,7 @@ Create Date: 2021-02-23 11:30:23.732253
 import sqlalchemy as sa
 from alembic import op
 
-from app.models import ChoiceType, schemas
+from app.models.hyperfile import ChoiceType, schemas
 
 # revision identifiers, used by Alembic.
 revision = "8a3e2f1927b8"

@@ -1,4 +1,7 @@
-# Authentication/Authorization Utilities
+"""
+DEPRECATED: This file is no longer used. It is kept for reference purposes only.
+Please utilize api/auth_deps.py instead.
+"""
 import uuid
 from datetime import datetime, timedelta
 from typing import Tuple
@@ -8,11 +11,10 @@ import redis
 from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
 
-from app import schemas
-from app.models import User
-from app.settings import settings
+from app import crud, schemas
+from app.api.deps import get_db, get_redis_client
+from app.core.config import settings
 from app.utils.onadata_utils import get_access_token
-from app.utils.utils import get_db, get_redis_client
 
 
 def create_session(
@@ -29,7 +31,7 @@ def create_session(
         "session-id": session_id,
         "server_id": user.server_id,
     }
-    encoded_jwt = jwt.encode(jwt_data, settings.secret_key, algorithm="HS256")
+    encoded_jwt = jwt.encode(jwt_data, settings.SECRET_KEY, algorithm="HS256")
 
     if request:
         request.session["session-data"] = jwt_data
@@ -67,7 +69,7 @@ class IsAuthenticatedUser:
 
                 try:
                     session_data = jwt.decode(
-                        value, settings.secret_key, algorithms=["HS256"]
+                        value, settings.SECRET_KEY, algorithms=["HS256"]
                     )
                 except jwt.DecodeError:
                     return _raise_error(invalid_credentials_error)
@@ -79,7 +81,7 @@ class IsAuthenticatedUser:
             session_key = f"{username}-sessions"
 
             if self.is_valid_session(session_id=session_id, session_key=session_key):
-                user = User.get_using_server_and_username(self.db, username, server_id)
+                user = crud.user.get_by_username(self.db, username, server_id)
                 # Validate that the users credentials are still valid on the server
                 if user and get_access_token(user, user.server, self.db):
                     return user
