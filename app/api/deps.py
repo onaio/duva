@@ -18,7 +18,9 @@ def get_db() -> Generator:
 
 def get_redis_client() -> Generator:
     try:
-        client = redis.from_url(str(settings.REDIS_URL))
+        client = redis.from_url(
+            str(settings.REDIS_URL), socket_timeout=30, socket_connect_timeout=30
+        )
         yield client
     finally:
         client.close()

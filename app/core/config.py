@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 from urllib.parse import quote_plus
 
 from cryptography.fernet import Fernet
-from pydantic import AnyHttpUrl, HttpUrl, RedisDsn, validator
+from pydantic import AnyHttpUrl, HttpUrl, validator
 from pydantic_settings import BaseSettings
 
 

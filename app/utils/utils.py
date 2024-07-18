@@ -6,7 +6,7 @@ Please utilize api/deps.py instead.
 import redis
 
 from app.database.session import SessionLocal
-from app.settings import settings
+from app.core.config import settings
 
 
 def get_db():
@@ -19,7 +19,7 @@ def get_db():
 
 def get_redis_client():
     redis_client = redis.Redis(
-        host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
+        host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB
     )
     try:
         yield redis_client

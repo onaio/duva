@@ -3,13 +3,13 @@ from fastapi_cache.backends.redis import CACHE_KEY, RedisCacheBackend
 from tableauhyperapi import HyperProcess, Telemetry
 
 from app.common_tags import HYPER_PROCESS_CACHE_KEY
-from app.settings import settings
+from app.core.config import settings
 from app.utils.onadata_utils import start_csv_import_to_hyper
 
 
 def csv_import_job(instance_id):
     # Connect to redis cache
-    rc = RedisCacheBackend(settings.redis_url)
+    rc = RedisCacheBackend(settings.REDIS_URL)
     caches.set(CACHE_KEY, rc)
 
     # Check if Hyper Process has started

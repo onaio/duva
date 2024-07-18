@@ -10,7 +10,7 @@ QUEUE_NAME = os.environ.get("QUEUE_NAME", "default")
 CRON_SCHEDULE = os.environ.get("CRON_SCHEDULE", "*/15 * * * *")
 TASK_TIMEOUT = os.environ.get("TASK_TIMEOUT", "3600")
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/1")
-REDIS_CONN = Redis.from_url(REDIS_URL)
+REDIS_CONN = Redis.from_url(REDIS_URL, socket_timeout=30, socket_connect_timeout=30)
 QUEUE = Queue(QUEUE_NAME, connection=REDIS_CONN)
 
 
