@@ -10,16 +10,14 @@ class TestConfiguration(TestBase):
     def _create_configuration(
         self, auth_credentials: dict, mock_client, config_data: dict = None
     ):
-        config_data = (
-            config_data
-            or schemas.ConfigurationCreateRequest(
-                site_name="test",
-                server_address="http://test",
-                token_name="test",
-                token_value="test",
-                project_name="default",
-            ).dict()
-        )
+        create_req_data = schemas.ConfigurationCreateRequest(
+            site_name="test",
+            server_address="http://test",
+            token_name="test",
+            token_value="test",
+            project_name="default",
+        ).dict()
+        config_data = config_data or create_req_data
         mock_client.validate_configuration.return_value = True
         response = self.client.post(
             "/api/v1/configurations/", json=config_data, headers=auth_credentials

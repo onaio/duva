@@ -133,10 +133,8 @@ class TestFileRoute(TestBase):
         )
 
         assert response.status_code == 200
-        assert (
-            response.json().get("configuration_url")
-            == f"http://testserver/configurations/{configuration.id}/"
-        )
+        config_url = response.json().get("configuration_url")
+        assert config_url == f"http://testserver/configurations/{configuration.id}/"
 
     def test_file_delete(self, create_user_and_login):
         _, jwt = create_user_and_login
@@ -235,10 +233,8 @@ class TestFileRoute(TestBase):
         )
         assert response.status_code == 200
         response_json = response.json()
-        assert (
-            response_json.get("configuration_url")
-            == f"http://testserver/configurations/{config_2.id}/"
-        )
+        config_url = response_json.get("configuration_url")
+        assert config_url == f"http://testserver/configurations/{config_2.id}/"
         # Delete Tableau Configurations
         self.db.query(Configuration).delete()
         self.db.commit()

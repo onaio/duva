@@ -96,17 +96,11 @@ def import_to_hyper(hyperfile_id: int, schedule_cron: bool = True):
     with Importer(hyperfile=hyperfile, db=db) as importer:
         success = importer.import_csv()
         if not success:
+            sync_meta = hyperfile.meta_data.get(SYNC_FAILURES_METADATA, 0) + 1
             hyperfile = crud.hyperfile.update(
                 db,
                 db_obj=hyperfile,
-                obj_in={
-                    "meta_data": {
-                        SYNC_FAILURES_METADATA: hyperfile.meta_data.get(
-                            SYNC_FAILURES_METADATA, 0
-                        )
-                        + 1
-                    }
-                },
+                obj_in={"meta_data": {SYNC_FAILURES_METADATA: sync_meta}},
             )
 
 

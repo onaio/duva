@@ -3,7 +3,7 @@ Logging configuration to be set for the server
 """
 
 from pydantic import BaseModel, Field
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict
 
 
 class LogConfig(BaseModel):

@@ -44,10 +44,9 @@ class TestOAuthRoute(TestBase):
 
         mock_create_auth_state.return_value = "some_uuid", '{{"server_id": 1}}'
         response = self.client.get("/api/v1/oauth/login?server_url=http://testserver")
-        assert (
-            response.url
-            == f"http://testserver/o/authorize?client_id={self.mock_server.client_id}&response_type=code&state=some_uuid"
-        )
+        c_id = self.mock_server.client_id
+        url = f"http://testserver/o/authorize?client_id={c_id}&response_type=code&state=some_uuid"
+        assert response.url == url
 
     @patch("app.api.v1.endpoints.oauth.security.request_onadata_credentials")
     @patch("app.api.v1.endpoints.oauth.onadata.OnaDataAPIClient")
