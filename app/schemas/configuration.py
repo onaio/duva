@@ -23,7 +23,7 @@ class ConfigurationResponse(BaseModel):
     export_settings: ExportConfigurationSettings
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ConfigurationListResponse(BaseModel):
@@ -35,7 +35,7 @@ class ConfigurationListResponse(BaseModel):
     export_settings: ExportConfigurationSettings
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ConfigurationCreateRequest(BaseModel):
@@ -66,4 +66,4 @@ class Configuration(ConfigurationCreate):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

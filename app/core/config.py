@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     SENTRY_DSN: Optional[HttpUrl] = ""
 
     @validator("SENTRY_DSN", pre=True)
-    def sentry_dsn_can_be_blank(cls, v: str) -> Optional[str]:
+    def sentry_dsn_can_be_blank(cls, v: str = "") -> Optional[str]:
         if len(v) == 0:
             return None
         return v
@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
     REDIS_PASSWORD: Optional[str] = None
     REDIS_USERNAME: Optional[str] = None
-    REDIS_URL: Optional[RedisDsn] = None
+    REDIS_URL: Optional[str] = None
 
     @validator("REDIS_URL", pre=True)
     def assemble_redis_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
@@ -65,7 +65,8 @@ class Settings(BaseSettings):
             if values.get("REDIS_USERNAME") and values.get("REDIS_PASSWORD")
             else ""
         )
-        return f"redis://{user_info}{values.get('REDIS_HOST')}:{values.get('REDIS_PORT')}/{values.get('REDIS_DB')}"
+        if not user_info:
+            return f"redis://{values.get('REDIS_HOST')}:{values.get('REDIS_PORT')}/{values.get('REDIS_DB')}"
 
     SECURE_SESSIONS: bool = True
     SESSION_SAME_SITE: str = "lax"

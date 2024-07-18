@@ -30,8 +30,7 @@ class FileListItem(BaseModel):
     meta_data: Optional[dict] = None
 
     class Config:
-        orm_mode = True
-        from_attributes = True  # Enable from_orm usage
+        from_attributes = True
 
 
 class FileCreate(FileBase):
@@ -56,7 +55,7 @@ class File(FileCreate):
     configuration: Optional[Configuration] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class FileResponseBody(FileBase):
@@ -70,8 +69,7 @@ class FileResponseBody(FileBase):
     meta_data: Optional[dict] = None
 
     class Config:
-        orm_mode = True
-        from_attributes = True  # Enable from_orm usage
+        from_attributes = True
 
 
 class FilePatchRequestBody(BaseModel):
