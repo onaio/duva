@@ -1,6 +1,7 @@
 """
 Settings file for RQ Workers
 """
+
 import os
 
 import sentry_sdk

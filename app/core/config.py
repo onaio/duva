@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Optional, Union
+from urllib.parse import quote_plus
 
 from cryptography.fernet import Fernet
-from pydantic import AnyHttpUrl, BaseSettings, HttpUrl, PostgresDsn, RedisDsn, validator
+from pydantic import AnyHttpUrl, HttpUrl, RedisDsn, validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -26,18 +28,17 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "duva"
     POSTGRES_PASSWORD: str = "duva"
     POSTGRES_DB: str = "duva"
-    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+    SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         if isinstance(v, str):
             return v
-        return PostgresDsn.build(
-            scheme="postgresql",
-            user=values.get("POSTGRES_USER"),
-            password=values.get("POSTGRES_PASSWORD"),
-            host=values.get("POSTGRES_SERVER"),
-            path=f"/{values.get('POSTGRES_DB') or ''}",
+        return (
+            f"postgresql://{quote_plus(values.get('POSTGRES_USER'))}:"
+            f"{quote_plus(values.get('POSTGRES_PASSWORD'))}@"
+            f"{values.get('POSTGRES_SERVER')}/"
+            f"{values.get('POSTGRES_DB')}"
         )
 
     SENTRY_DSN: Optional[HttpUrl] = ""
@@ -59,14 +60,12 @@ class Settings(BaseSettings):
     def assemble_redis_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         if isinstance(v, str):
             return v
-        return RedisDsn.build(
-            scheme="redis",
-            user=values.get("REDIS_USERNAME"),
-            password=values.get("REDIS_PASSWORD"),
-            host=values.get("REDIS_HOST"),
-            port=str(values.get("REDIS_PORT")),
-            path=f"/{values.get('REDIS_DB') or ''}",
+        user_info = (
+            f"{quote_plus(values.get('REDIS_USERNAME'))}:{quote_plus(values.get('REDIS_PASSWORD'))}@"
+            if values.get("REDIS_USERNAME") and values.get("REDIS_PASSWORD")
+            else ""
         )
+        return f"redis://{user_info}{values.get('REDIS_HOST')}:{values.get('REDIS_PORT')}/{values.get('REDIS_DB')}"
 
     SECURE_SESSIONS: bool = True
     SESSION_SAME_SITE: str = "lax"

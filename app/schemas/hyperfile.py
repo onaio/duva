@@ -31,6 +31,7 @@ class FileListItem(BaseModel):
 
     class Config:
         orm_mode = True
+        from_attributes = True  # Enable from_orm usage
 
 
 class FileCreate(FileBase):
@@ -63,13 +64,14 @@ class FileResponseBody(FileBase):
     filename: str
     file_status: FileStatusEnum = FileStatusEnum.file_unavailable
     last_updated: Optional[datetime] = None
-    download_url: Optional[str]
-    download_url_valid_till: Optional[str]
-    configuration_url: Optional[str]
+    download_url: Optional[str] = None
+    download_url_valid_till: Optional[str] = None
+    configuration_url: Optional[str] = None
     meta_data: Optional[dict] = None
 
     class Config:
         orm_mode = True
+        from_attributes = True  # Enable from_orm usage
 
 
 class FilePatchRequestBody(BaseModel):
@@ -77,5 +79,5 @@ class FilePatchRequestBody(BaseModel):
 
 
 class FileRequestBody(FileBase):
-    sync_immediately: bool = False
-    configuration_id: Optional[int]
+    sync_immediately: Optional[bool] = False
+    configuration_id: Optional[int] = None

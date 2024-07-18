@@ -44,18 +44,18 @@ class ConfigurationCreateRequest(BaseModel):
     token_name: str
     project_name: str
     token_value: str
-    export_settings: Optional[
-        ExportConfigurationSettings
-    ] = ExportConfigurationSettings()
+    export_settings: Optional[ExportConfigurationSettings] = (
+        ExportConfigurationSettings()
+    )
 
 
 class ConfigurationPatchRequest(BaseModel):
-    server_address: Optional[str]
-    site_name: Optional[str]
-    token_name: Optional[str]
-    project_name: Optional[str]
-    token_value: Optional[str]
-    export_settings: Optional[ExportConfigurationSettings]
+    server_address: Optional[str] = None
+    site_name: Optional[str] = None
+    token_name: Optional[str] = None
+    project_name: Optional[str] = None
+    token_value: Optional[str] = None
+    export_settings: Optional[ExportConfigurationSettings] = None
 
 
 class ConfigurationCreate(ConfigurationCreateRequest):

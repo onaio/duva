@@ -21,7 +21,9 @@ app = FastAPI(
     version=settings.APP_VERSION,
 )
 
-dictConfig(LogConfig().dict())
+log_config = LogConfig().dict()
+log_config["version"] = 1  # Ensure 'version' is included in the dict
+dictConfig(log_config)
 
 
 # Include middlewares

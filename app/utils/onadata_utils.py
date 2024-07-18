@@ -2,6 +2,7 @@
 DEPRECATED: This module is no longer used. It is kept for reference purposes only.
 Please utilize core/onadata.py instead.
 """
+
 import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile

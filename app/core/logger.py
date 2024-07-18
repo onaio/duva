@@ -1,37 +1,39 @@
 """
 Logging configuration to be set for the server
 """
-from pydantic import BaseModel
 
-from app.core.config import settings
+from pydantic import BaseModel, Field
+from typing import Any, ClassVar, Dict, List
 
 
 class LogConfig(BaseModel):
-    """Logging configuration to be set for the server"""
+    version: ClassVar[int] = 1
+    disable_existing_loggers: ClassVar[bool] = False
+    formatters: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    handlers: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    loggers: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
 
-    LOGGER_NAME: str = settings.APP_NAME
-    LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
-    LOG_LEVEL: str = "DEBUG"
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True  # Enable from_orm usage
 
-    # Logging config
-    version = 1
-    disable_existing_loggers = False
-    formatters = {
+
+log_config = LogConfig(
+    formatters={
         "default": {
             "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": LOG_FORMAT,
+            "fmt": "%(levelprefix)s %(asctime)s %(message)s",
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-    }
-    handlers = {
+    },
+    handlers={
         "default": {
             "formatter": "default",
             "class": "logging.StreamHandler",
-            "stream": "ext://sys.stderr",
+            "stream": "ext://sys.stdout",
         },
-    }
-    loggers = {
-        LOGGER_NAME: {"handlers": ["default"], "level": LOG_LEVEL},
-        "importer": {"handlers": ["default"], "level": LOG_LEVEL},
-        "onadata": {"handlers": ["default"], "level": LOG_LEVEL},
-    }
+    },
+    loggers={
+        "uvicorn": {"handlers": ["default"], "level": "INFO"},
+    },
+)

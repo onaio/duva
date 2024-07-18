@@ -2,6 +2,7 @@
 DEPRECATED: This file is no longer used. It is kept for reference purposes only.
 Please utilize api/auth_deps.py instead.
 """
+
 import uuid
 from datetime import datetime, timedelta
 from typing import Tuple
