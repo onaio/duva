@@ -210,7 +210,10 @@ class OnaDataAPIClient:
             self.refresh_access_token()
             return self.get_form(form_id)
         elif resp.status_code != 200:
-            logger.error(f"{self.unique_id} - Failed to get form {resp.status_code}")
+            logger.error(
+                f"{self.unique_id} - Failed to get form {resp.status_code} - "
+                f"Reason {resp.text}"
+            )
             raise FailedExternalRequest(resp.text)
         else:
             logger.info(f"{self.unique_id} - Got form {form_id}")

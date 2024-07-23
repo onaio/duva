@@ -22,18 +22,37 @@ log_config = LogConfig(
     formatters={
         "default": {
             "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": "%(levelprefix)s %(asctime)s %(message)s",
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     },
     handlers={
-        "default": {
-            "formatter": "default",
+        "console": {
             "class": "logging.StreamHandler",
+            "formatter": "default",
             "stream": "ext://sys.stdout",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "formatter": "default",
+            "filename": "app.log",
         },
     },
     loggers={
-        "uvicorn": {"handlers": ["default"], "level": "INFO"},
+        "": {
+            "level": "DEBUG",
+            "handlers": ["console", "file"],
+            "propagate": True,
+        },
+        "uvicorn.error": {
+            "level": "ERROR",
+            "handlers": ["console", "file"],
+            "propagate": True,
+        },
+        "uvicorn.access": {
+            "level": "INFO",
+            "handlers": ["console", "file"],
+            "propagate": True,
+        },
     },
 )

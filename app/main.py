@@ -13,7 +13,7 @@ from starlette_exporter import PrometheusMiddleware, handle_metrics
 from app.api.deps import get_db, get_redis_client
 from app.api.v1.api import api_router
 from app.core.config import settings
-from app.core.logger import LogConfig
+from app.core.logger import log_config
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -21,9 +21,9 @@ app = FastAPI(
     version=settings.APP_VERSION,
 )
 
-log_config = LogConfig().dict()
-log_config["version"] = 1  # Ensure 'version' is included in the dict
-dictConfig(log_config)
+logging_config = log_config.__dict__
+logging_config["version"] = 1  # Ensure 'version' is included in the dict
+dictConfig(logging_config)
 
 
 # Include middlewares
