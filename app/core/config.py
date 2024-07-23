@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 from urllib.parse import quote_plus
 
 from cryptography.fernet import Fernet
-from pydantic import AnyHttpUrl, HttpUrl, validator
+from pydantic import validator
 from pydantic_settings import BaseSettings
 
 
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
             f"{values.get('POSTGRES_DB')}"
         )
 
-    SENTRY_DSN: Optional[HttpUrl] = ""
+    SENTRY_DSN: Optional[str] = ""
 
     @validator("SENTRY_DSN", pre=True)
     def sentry_dsn_can_be_blank(cls, v: str = "") -> Optional[str]:
@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     # CORS_ALLOWED_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
-    CORS_ALLOWED_ORIGINS: List[AnyHttpUrl] = []
+    CORS_ALLOWED_ORIGINS: List[str] = []
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: List[str] = ["*"]
     CORS_ALLOW_HEADERS: List[str] = ["*"]
