@@ -1,8 +1,9 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 from urllib.parse import quote_plus
 
 from cryptography.fernet import Fernet
 from pydantic import field_validator
+from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings
 
 
@@ -31,10 +32,12 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
     DEBUG: bool = False
 
-    @field_validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
+    def assemble_db_connection(cls, v: Optional[str], values: ValidationInfo) -> Any:
         if isinstance(v, str):
             return v
+
+        values = values.data
         return (
             f"postgresql://{quote_plus(values.get('POSTGRES_USER'))}:"
             f"{quote_plus(values.get('POSTGRES_PASSWORD'))}@"
@@ -44,7 +47,7 @@ class Settings(BaseSettings):
 
     SENTRY_DSN: Optional[str] = ""
 
-    @field_validator("SENTRY_DSN", pre=True)
+    @field_validator("SENTRY_DSN", mode="before")
     def sentry_dsn_can_be_blank(cls, v: str = "") -> Optional[str]:
         if len(v) == 0:
             return None
@@ -57,10 +60,12 @@ class Settings(BaseSettings):
     REDIS_USERNAME: Optional[str] = None
     REDIS_URL: Optional[str] = None
 
-    @field_validator("REDIS_URL", pre=True)
-    def assemble_redis_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    @field_validator("REDIS_URL", mode="before")
+    def assemble_redis_connection(cls, v: Optional[str], values: ValidationInfo) -> Any:
         if isinstance(v, str):
             return v
+
+        values = values.data
         user_info = (
             f"{quote_plus(values.get('REDIS_USERNAME'))}:{quote_plus(values.get('REDIS_PASSWORD'))}@"
             if values.get("REDIS_USERNAME") and values.get("REDIS_PASSWORD")
@@ -85,7 +90,7 @@ class Settings(BaseSettings):
     S3_REGION: str = "eu-west-1"
     S3_BUCKET: str = "duva"
 
-    @field_validator("CORS_ALLOWED_ORIGINS", pre=True)
+    @field_validator("CORS_ALLOWED_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
