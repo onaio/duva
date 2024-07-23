@@ -33,7 +33,7 @@ def list_configurations(
     configurations = user.configurations
 
     for config in configurations:
-        config = schemas.ConfigurationListResponse.from_orm(config)
+        config = schemas.ConfigurationListResponse.model_validate(config)
         config.url = f"{request.base_url.scheme}://{request.base_url.netloc}"
         config.url += router.url_path_for("get_configuration", config_id=config.id)
         resp.append(config)

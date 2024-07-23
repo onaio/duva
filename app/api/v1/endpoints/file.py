@@ -59,7 +59,7 @@ def list_files(
         if file.user_id == user.id:
             url = f"{request.base_url.scheme}://{request.base_url.netloc}"
             url += router.url_path_for("get_file", file_id=file.id)
-            entry = schemas.FileListItem.from_orm(file)
+            entry = schemas.FileListItem.model_validate(file)
             entry.url = url
             response.append(entry)
     return response
@@ -79,7 +79,7 @@ def get_file(
     file = crud.hyperfile.get(db=db, id=file_id)
 
     if file and file.user_id == user.id:
-        return inject_urls(schemas.FileResponseBody.from_orm(file), request, file)
+        return inject_urls(schemas.FileResponseBody.model_validate(file), request, file)
     else:
         raise HTTPException(status_code=404, detail="File not found.")
 
@@ -108,7 +108,7 @@ def update_file(
 
     if file and file.user_id == user.id:
         file = crud.hyperfile.update(db=db, db_obj=file, obj_in=body)
-        return inject_urls(schemas.FileResponseBody.from_orm(file), request, file)
+        return inject_urls(schemas.FileResponseBody.model_validate(file), request, file)
     else:
         raise HTTPException(status_code=404, detail="File not found.")
 
@@ -233,4 +233,4 @@ def create_file(
     if body.sync_immediately:
         background_tasks.add_task(import_to_hyper, hfile.id, False)
     schedule_import_to_hyper_job(db, hfile)
-    return inject_urls(schemas.FileResponseBody.from_orm(hfile), request, hfile)
+    return inject_urls(schemas.FileResponseBody.model_validate(hfile), request, hfile)

@@ -15,35 +15,39 @@ class ExportConfigurationSettings(BaseModel):
 
 
 class ConfigurationResponse(BaseModel):
-    id: int
-    server_address: str
-    site_name: str
-    token_name: str
-    project_name: str
-    export_settings: ExportConfigurationSettings
+    id: Optional[int] = None
+    server_address: Optional[str] = None
+    site_name: Optional[str] = None
+    token_name: Optional[str] = None
+    project_name: Optional[str] = None
+    export_settings: Optional[ExportConfigurationSettings] = (
+        ExportConfigurationSettings()
+    )
 
     class Config:
         from_attributes = True
 
 
 class ConfigurationListResponse(BaseModel):
-    url: Optional[str]
-    id: int
-    site_name: str
-    token_name: str
-    project_name: str
-    export_settings: ExportConfigurationSettings
+    url: Optional[str] = None
+    id: Optional[int] = None
+    site_name: Optional[str] = None
+    token_name: Optional[str] = None
+    project_name: Optional[str] = None
+    export_settings: Optional[ExportConfigurationSettings] = (
+        ExportConfigurationSettings()
+    )
 
     class Config:
         from_attributes = True
 
 
 class ConfigurationCreateRequest(BaseModel):
-    server_address: str
-    site_name: str
-    token_name: str
-    project_name: str
-    token_value: str
+    server_address: Optional[str] = None
+    site_name: Optional[str] = None
+    token_name: Optional[str] = None
+    project_name: Optional[str] = None
+    token_value: Optional[str] = None
     export_settings: Optional[ExportConfigurationSettings] = (
         ExportConfigurationSettings()
     )
@@ -59,11 +63,11 @@ class ConfigurationPatchRequest(BaseModel):
 
 
 class ConfigurationCreate(ConfigurationCreateRequest):
-    user_id: int
+    user_id: Optional[int] = None
 
 
 class Configuration(ConfigurationCreate):
-    id: int
+    id: Optional[int] = None
 
     class Config:
         from_attributes = True
