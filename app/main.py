@@ -2,6 +2,7 @@ import os
 from logging.config import dictConfig
 
 import sentry_sdk
+from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -15,11 +16,19 @@ from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logger import log_config
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if not os.path.isdir(settings.MEDIA_ROOT):
+        os.mkdir(settings.MEDIA_ROOT)
+
+    yield
+
 app = FastAPI(
     title=settings.APP_NAME,
     description=settings.APP_DESCRIPTION,
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
+    lifespan=lifespan,
 )
 
 logging_config = log_config.__dict__
@@ -84,9 +93,3 @@ def service_health(
         },
         200 if (database_reachable and cache_reachable) else 500,
     )
-
-
-@app.on_event("startup")
-async def on_startup() -> None:
-    if not os.path.isdir(settings.MEDIA_ROOT):
-        os.mkdir(settings.MEDIA_ROOT)
