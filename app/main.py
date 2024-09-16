@@ -16,12 +16,14 @@ from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logger import log_config
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if not os.path.isdir(settings.MEDIA_ROOT):
         os.mkdir(settings.MEDIA_ROOT)
 
     yield
+
 
 app = FastAPI(
     title=settings.APP_NAME,
