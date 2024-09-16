@@ -57,9 +57,9 @@ def _prep_csv_for_import(csv_path: Path) -> List[TableDefinition.Column]:
     columns: List[SqlType] = []
     df = pd.read_csv(csv_path, na_values=["n/a", ""])
     df = df.convert_dtypes()
-    for name, dtype in df.dtypes.iteritems():
+    for i, dtype in enumerate(df.dtypes):
         column = TableDefinition.Column(
-            Name(name), _pandas_type_to_hyper_sql_type(dtype.kind)()
+            Name(df.dtypes.index[i]), _pandas_type_to_hyper_sql_type(dtype.kind)()
         )
         columns.append(column)
     # Save dataframe to CSV as the dataframe is more cleaner
