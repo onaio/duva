@@ -57,7 +57,12 @@ def list_files(
 
     for file in files:
         if file.user_id == user.id:
-            url = f"{request.base_url.scheme}://{request.base_url.netloc}"
+            url = "".join(
+                [
+                    f"{request.base_url.scheme}://{request.base_url.netloc}",
+                    "/api/v1/files",
+                ]
+            )
             url += router.url_path_for("get_file", file_id=file.id)
             entry = schemas.FileListItem.model_validate(file)
             entry.url = url
