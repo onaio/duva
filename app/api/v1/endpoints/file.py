@@ -2,7 +2,7 @@ from typing import List, Optional
 from urllib.parse import urljoin
 
 from fastapi import BackgroundTasks, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
@@ -72,6 +72,7 @@ def get_file(
     *,
     file_id: int,
     request: Request,
+    file_format: Optional[str] = None,
 ):
     """
     Retrieve a specific Hyper File
@@ -79,7 +80,13 @@ def get_file(
     file = crud.hyperfile.get(db=db, id=file_id)
 
     if file and file.user_id == user.id:
-        return inject_urls(schemas.FileResponseBody.model_validate(file), request, file)
+        response = inject_urls(
+            schemas.FileResponseBody.model_validate(file), request, file
+        )
+        if file_format == "hyper":
+            return RedirectResponse(response.download_url)
+
+        return response
     else:
         raise HTTPException(status_code=404, detail="File not found.")
 
