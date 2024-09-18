@@ -249,8 +249,10 @@ class TestFileRoute(TestBase):
         assert len(user.hyper_files) == 1
         assert len(response.json()) == len(user.hyper_files)
         hyperfile = user.hyper_files[0]
+        url = f"http://testserver/{hyperfile.id}/"
         expected_data = schemas.FileListItem(
-            url=f"http://testserver/{hyperfile.id}/",
+            url=url,
+            download_url=url + "?file_format=hyper",
             id=hyperfile.id,
             form_id=hyperfile.form_id,
             filename=hyperfile.filename,

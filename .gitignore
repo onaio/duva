@@ -10,3 +10,4 @@ MANIFEST
 .coverage
 *.egg-info
 .eggs
+*.log

@@ -28,6 +28,7 @@ class FileListItem(BaseModel):
     file_status: FileStatusEnum = FileStatusEnum.file_unavailable
     last_updated: Optional[datetime] = None
     meta_data: Optional[dict] = None
+    download_url: Optional[str] = ""
 
     class Config:
         from_attributes = True

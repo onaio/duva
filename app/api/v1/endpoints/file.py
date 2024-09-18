@@ -61,6 +61,7 @@ def list_files(
             url += router.url_path_for("get_file", file_id=file.id)
             entry = schemas.FileListItem.model_validate(file)
             entry.url = url
+            entry.download_url = url + "?file_format=hyper"
             response.append(entry)
     return response
 
