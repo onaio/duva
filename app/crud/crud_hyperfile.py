@@ -6,15 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.common_tags import JOB_ID_METADATA
 from app.core.config import settings
-from app.core.exceptions import FailedExternalRequest
-from app.core.onadata import OnaDataAPIClient
-from app.core.security import fernet_decrypt
 from app.crud.base import CRUDBase
 from app.jobs.scheduler import cancel_job
 from app.libs.s3.client import S3Client
 from app.libs.tableau.client import InvalidConfiguration, TableauClient
 from app.models.hyperfile import HyperFile
-from app.models.user import User
 from app.schemas.hyperfile import (
     FileCreate,
     FilePatchRequestBody,
@@ -34,22 +30,6 @@ class CRUDHyperFile(
         s3_client = S3Client()
         s3_client.delete(self.get_file_path(obj=obj))
         return super().delete(db, id=id)
-
-    def create(self, db: Session, *, obj_in: FileCreate, user: User) -> HyperFile:
-        client = OnaDataAPIClient(
-            base_url=user.server.url,
-            access_token=fernet_decrypt(user.access_token),
-            user=user,
-        )
-        try:
-            form_data = client.get_form(obj_in.form_id)
-        except FailedExternalRequest as e:
-            raise ValueError(f"Error retrieving form {obj_in.form_id}: {e}")
-
-        if form_data.get("public_key"):
-            raise Exception("Encrypted forms are not supported")
-        obj_in.filename = f"{form_data['title']}.hyper"
-        return super().create(db, obj_in=obj_in)
 
     def get_active(self, db: Session) -> List[HyperFile]:
         return db.query(self.model).filter(self.model.is_active == True).all()  # noqa

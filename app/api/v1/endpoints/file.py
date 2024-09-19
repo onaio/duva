@@ -8,7 +8,10 @@ from sqlalchemy.orm import Session
 from app import crud, schemas
 from app.api.auth_deps import get_current_user
 from app.api.deps import get_db, APIRouter
+from app.core.exceptions import FailedExternalRequest
 from app.core.importer import import_to_hyper, schedule_import_to_hyper_job
+from app.core.onadata import OnaDataAPIClient
+from app.core.security import fernet_decrypt
 from app.models.configuration import Configuration
 from app.models.hyperfile import HyperFile
 from app.models.user import User
@@ -227,7 +230,26 @@ def create_file(
     if not user:
         raise HTTPException(status_code=403, detail="Not authenticated")
 
-    create_data = schemas.FileCreate(form_id=body.form_id, user_id=user.id)
+    client = OnaDataAPIClient(
+        base_url=user.server.url,
+        access_token=fernet_decrypt(user.access_token),
+        user=user,
+    )
+    try:
+        form_data = client.get_form(body.form_id)
+    except FailedExternalRequest as e:
+        raise HTTPException(
+            status_code=400, detail=str(f"Error retrieving form {body.form_id}: {e}")
+        )
+
+    if form_data.get("public_key"):
+        raise Exception("Encrypted forms are not supported")
+
+    filename = f"{form_data['title']}.hyper"
+
+    create_data = schemas.FileCreate(
+        form_id=body.form_id, user_id=user.id, filename=filename
+    )
     if body.configuration_id:
         configuration: Optional[Configuration] = crud.configuration.get(
             db, id=body.configuration_id
@@ -239,7 +261,7 @@ def create_file(
         create_data.configuration_id = body.configuration_id
 
     try:
-        hfile = crud.hyperfile.create(db=db, obj_in=create_data, user=user)
+        hfile = crud.hyperfile.create(db=db, obj_in=create_data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

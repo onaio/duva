@@ -9,7 +9,7 @@ from app.tests.test_base import TestBase
 class TestFileRoute(TestBase):
     @patch("app.api.v1.endpoints.file.crud.hyperfile.get_download_links")
     @patch("app.api.v1.endpoints.file.schedule_import_to_hyper_job")
-    @patch("app.crud.crud_hyperfile.OnaDataAPIClient")
+    @patch("app.api.v1.endpoints.file.OnaDataAPIClient")
     def _create_file(
         self,
         auth_credentials,
