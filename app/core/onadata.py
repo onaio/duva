@@ -16,6 +16,7 @@ from app.common_tags import (
     ONADATA_USER_ENDPOINT,
 )
 from app.core.config import settings
+from app.core.exceptions import FailedExternalRequest
 from app.core.security import fernet_decrypt
 from app.database.session import SessionLocal
 from app.models.hyperfile import HyperFile
@@ -23,10 +24,6 @@ from app.models.hyperfile import HyperFile
 COMMON_HEADERS = {"User-Agent": f"{settings.APP_NAME}/{settings.APP_VERSION}"}
 
 logger = logging.getLogger("onadata")
-
-
-class FailedExternalRequest(Exception):
-    pass
 
 
 def write_export_to_temp_file(export_url, client, retry: int = 0):

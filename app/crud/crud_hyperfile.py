@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.common_tags import JOB_ID_METADATA
 from app.core.config import settings
-from app.core.onadata import FailedExternalRequest, OnaDataAPIClient
+from app.core.exceptions import FailedExternalRequest
+from app.core.onadata import OnaDataAPIClient
 from app.core.security import fernet_decrypt
 from app.crud.base import CRUDBase
 from app.jobs.scheduler import cancel_job
