@@ -269,11 +269,17 @@ class TestFileRoute(TestBase):
             "/api/v1/files/?form_id=000", headers=auth_credentials
         )
         assert response.status_code == 200
-        assert len(response.json()) == 0
+        assert response.json() == []
 
         response = self.client.get("/api/v1/files/?form_id=1", headers=auth_credentials)
         assert response.status_code == 200
-        assert len(response.json()) == len(user.hyper_files)
+        assert response.json()[0] == expected_data
+
+        response = self.client.get(
+            "/api/v1/files/?form_id=1:", headers=auth_credentials
+        )
+        assert response.status_code == 400
+        assert response.json() == {"detail": "Invalid form_id provided: 1:"}
 
     def test_trigger_hyper_file_sync(self, create_user_and_login):
         _, jwt = create_user_and_login

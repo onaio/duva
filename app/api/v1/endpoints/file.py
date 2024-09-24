@@ -1,3 +1,5 @@
+import logging
+
 from typing import List, Optional
 from urllib.parse import urljoin
 
@@ -16,6 +18,7 @@ from app.models.configuration import Configuration
 from app.models.hyperfile import HyperFile
 from app.models.user import User
 
+logger = logging.getLogger(__file__)
 router = APIRouter()
 
 
@@ -54,7 +57,16 @@ def list_files(
         raise HTTPException(status_code=403, detail="Not authenticated")
 
     if form_id:
-        files = crud.hyperfile.get_using_form(db=db, form_id=form_id, user_id=user.id)
+        try:
+            files = crud.hyperfile.get_using_form(
+                db=db, form_id=int(form_id), user_id=user.id
+            )
+        except ValueError as e:
+            logger.error("Invalid form_id provided: %s - %s", form_id, e)
+            raise HTTPException(
+                status_code=400, detail=f"Invalid form_id provided: {form_id}"
+            )
+
     else:
         files = user.hyper_files
 
