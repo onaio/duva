@@ -1,3 +1,5 @@
+import logging
+
 from typing import List, Optional
 from urllib.parse import urljoin
 
@@ -16,6 +18,7 @@ from app.models.configuration import Configuration
 from app.models.hyperfile import HyperFile
 from app.models.user import User
 
+logger = logging.getLogger("files")
 router = APIRouter()
 
 
@@ -57,6 +60,8 @@ def list_files(
         files = crud.hyperfile.get_using_form(db=db, form_id=form_id, user_id=user.id)
     else:
         files = user.hyper_files
+
+    logger.info("URL is %s: %s", request.url, request.url.scheme)
 
     for file in files:
         if file.user_id == user.id:
