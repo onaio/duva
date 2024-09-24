@@ -1,5 +1,3 @@
-import logging
-
 from typing import List, Optional
 from urllib.parse import urljoin
 
@@ -18,7 +16,6 @@ from app.models.configuration import Configuration
 from app.models.hyperfile import HyperFile
 from app.models.user import User
 
-logger = logging.getLogger("files")
 router = APIRouter()
 
 
@@ -61,19 +58,13 @@ def list_files(
     else:
         files = user.hyper_files
 
-    logger.info(
-        "URL is %s: %s - %s | %s",
-        request.url,
-        request.url.scheme,
-        request.headers,
-        request.scope,
-    )
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
 
     for file in files:
         if file.user_id == user.id:
             url = "".join(
                 [
-                    f"{request.url.scheme}://{request.base_url.netloc}",
+                    f"{scheme}://{request.base_url.netloc}",
                     "/api/v1/files",
                 ]
             )
