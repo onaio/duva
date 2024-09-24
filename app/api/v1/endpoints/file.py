@@ -61,7 +61,7 @@ def list_files(
     else:
         files = user.hyper_files
 
-    logger.info("URL is %s: %s", request.url, request.url.scheme)
+    logger.info("URL is %s: %s - %s", request.url, request.url.scheme, request.headers)
 
     for file in files:
         if file.user_id == user.id:
