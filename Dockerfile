@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10
+FROM python:3.10
 
 WORKDIR /app/
 
@@ -11,3 +11,5 @@ RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then pip install -r dev-requirement
 
 COPY . /app
 ENV PYTHONPATH=/app
+
+CMD ["fastapi", "run", "app/main.py", "--proxy-headers", "--port", "80"]
