@@ -1,5 +1,6 @@
 # Routes for the OAuth (/oauth) endpoint
 import json
+import logging
 from datetime import timedelta
 from typing import Optional
 from urllib.parse import urljoin
@@ -16,6 +17,8 @@ from app.core import onadata, security
 from app.core.config import settings
 
 router = APIRouter()
+
+logger = logging.getLogger("oauth")
 
 
 @router.get("/login", status_code=302)
@@ -100,8 +103,12 @@ def callback_oauth(
 
     try:
         access_token, refresh_token = security.request_onadata_credentials(server, code)
+        logger.info(
+            f"User access_token: '{access_token}', refresh_token: '{refresh_token}'"
+        )
         client = onadata.OnaDataAPIClient(server.url, access_token)
         profile = client.get_user()
+        logger.info(f"Profile found {profile}")
     except security.FailedToRequestOnaDataCredentials as e:
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=400, detail=str(e))
@@ -119,12 +126,14 @@ def callback_oauth(
                 access_token=access_token,
             )
             user = crud.user.create(db, obj_in=user_in)
+            logger.info("User created")
         else:
             user_in = schemas.UserUpdate(
                 refresh_token=refresh_token,
                 access_token=access_token,
             )
             user = crud.user.update(db, db_obj=user, obj_in=user_in)
+            logger.info("User updated")
 
         if redirect_url:
             # Create session for subsequent requests
