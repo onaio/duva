@@ -167,7 +167,7 @@ class OnaDataAPIClient:
         logger.info(f"{self.unique_id} - Refresh token response: {resp.status_code}")
         if resp.status_code == 200:
             data = resp.json()
-            logger.info(f"Got refreshed tokens {data}")
+            logger.info(f"Got refreshed tokens for user : {self.user.username}")
             self.user = crud.user.update(
                 db=SessionLocal(),
                 db_obj=self.user,

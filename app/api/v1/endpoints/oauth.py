@@ -103,12 +103,8 @@ def callback_oauth(
 
     try:
         access_token, refresh_token = security.request_onadata_credentials(server, code)
-        logger.info(
-            f"User access_token: '{access_token}', refresh_token: '{refresh_token}'"
-        )
         client = onadata.OnaDataAPIClient(server.url, access_token)
         profile = client.get_user()
-        logger.info(f"Profile found {profile}")
     except security.FailedToRequestOnaDataCredentials as e:
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=400, detail=str(e))

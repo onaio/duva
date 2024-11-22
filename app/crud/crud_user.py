@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
@@ -7,8 +6,6 @@ from app.core.security import fernet_encrypt
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
-
-logger = logging.getLogger("crud_user")
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -42,14 +39,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             update_data = obj_in.dict(exclude_unset=True)
 
         if update_data["refresh_token"]:
-            logger.info(f"refresh_token in: {update_data['refresh_token']}")
             update_data["refresh_token"] = fernet_encrypt(update_data["refresh_token"])
-            logger.info(f"refresh_token out: {update_data['refresh_token']}")
 
         if update_data["access_token"]:
-            logger.info(f"access_token in: {update_data['access_token']}")
             update_data["access_token"] = fernet_encrypt(update_data["access_token"])
-            logger.info(f"access_token out: {update_data['access_token']}")
 
         return super().update(db, obj_in=update_data, db_obj=db_obj)
 

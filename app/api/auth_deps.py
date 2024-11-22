@@ -21,10 +21,10 @@ def get_current_user(
     *,
     request: Request,
 ) -> User:
-    logger.info(f"Get current user token {token}")
+    logger.info("Get current user token.")
     if not token:
         token = request.session.get("token")
-        logger.info(f"Get current user session token {token}")
+        logger.info("Get current user session token.")
 
     if token:
         try:
@@ -33,7 +33,7 @@ def get_current_user(
             )
             token_data = TokenPayload(**payload)
         except jwt.PyJWTError:
-            logger.error(f"Get current user could not validate credentials {token}")
+            logger.error("Get current user could not validate credentials.")
             if request.session.get("token"):
                 del request.session["token"]
             raise HTTPException(
@@ -46,6 +46,6 @@ def get_current_user(
             raise HTTPException(status_code=401, detail="User not found")
 
         return user
-    logger.info(f"Get current user: missing token {token}")
+    logger.info("Get current user: missing token.")
 
     raise HTTPException(status_code=401, detail="Could not validate credentials")
