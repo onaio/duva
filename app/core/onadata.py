@@ -31,7 +31,7 @@ def write_export_to_temp_file(export_url, client, retry: int = 0):
     retry = 0 or retry
     status = 0
     with NamedTemporaryFile(delete=False, suffix=".csv") as export:
-        with client.stream("GET", export_url) as response:
+        with client.stream("GET", export_url, follow_redirects=True) as response:
             if response.status_code == 200:
                 for chunk in response.iter_bytes():
                     export.write(chunk)
