@@ -22,6 +22,7 @@ from tableauhyperapi import (
 
 from app import crud
 from app.common_tags import JOB_ID_METADATA, SYNC_FAILURES_METADATA
+from app.core.exceptions import FailedExternalRequest
 from app.core.onadata import OnaDataAPIClient
 from app.core.security import fernet_decrypt
 from app.database.session import SessionLocal
@@ -140,6 +141,14 @@ class Importer:
             logger.info(f"{self.unique_id} - Export downloaded")
         except RetryError as e:
             logger.info(f"{self.unique_id} - Retry Error: {e}")
+            self.hyperfile = crud.hyperfile.update_status(
+                self.db,
+                obj=self.hyperfile,
+                status=FileStatusEnum.latest_sync_failed,
+            )
+            return False
+        except FailedExternalRequest as e:
+            logger.error(f"{self.unique_id} - CSV export download failed: {e}")
             self.hyperfile = crud.hyperfile.update_status(
                 self.db,
                 obj=self.hyperfile,
