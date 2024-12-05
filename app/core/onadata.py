@@ -127,6 +127,19 @@ class OnaDataAPIClient:
             logger.info(f"{self.unique_id} - Access token expired. Refreshing")
             self.refresh_access_token()
             return self._download_export(url)
+        elif resp.status_code == 404:
+            logger.error(f"{self.unique_id} - Export not found (404) for {url}.")
+            raise FailedExternalRequest(
+                f"Failed to export CSV. URL: {url} 404 not found"
+            )
+
+        else:
+            logger.info(
+                f"{self.unique_id} - Download failed [status_code: {resp.status_code}, url: {url}]"
+            )
+            raise FailedExternalRequest(
+                f"Failed to export CSV. URL: {url}, status_code: {resp.status_code}"
+            )
 
     def download_export(self, hyperfile: HyperFile) -> Path:
         self.user = hyperfile.user
