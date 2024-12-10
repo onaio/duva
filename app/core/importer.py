@@ -91,6 +91,10 @@ def import_to_hyper(hyperfile_id: int, schedule_cron: bool = True):
     """
     db = SessionLocal()
     hyperfile = crud.hyperfile.get(db, id=hyperfile_id)
+    if not hyperfile:
+        logger.info(f"Hyperfile with id {hyperfile_id} does not exist!!!")
+        return
+
     if schedule_cron and not hyperfile.meta_data.get(JOB_ID_METADATA):
         hyperfile = schedule_import_to_hyper_job(db, hyperfile)
 
