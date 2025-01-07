@@ -1,6 +1,7 @@
 # Module containing the Importer class
 # Used to import CSV Data into a Hyper Database
 import logging
+import os
 from pathlib import Path
 from typing import List
 
@@ -11,6 +12,7 @@ from sqlalchemy.orm.session import Session
 from tableauhyperapi import (
     Connection,
     CreateMode,
+    HyperException,
     HyperProcess,
     Name,
     SqlType,
@@ -163,24 +165,36 @@ class Importer:
         if export_path:
             logger.info(f"{self.unique_id} - Importing CSV to Hyper")
             file_path = crud.hyperfile.get_latest_file(obj=self.hyperfile)
-            count = self._import_csv_to_hyper(
-                hyper_path=file_path, export_path=export_path
-            )
-            if count:
-                logger.info(f"{self.unique_id} - CSV imported to Hyper")
-                # Update HyperFile
-                logger.info(f"{self.unique_id} - Syncing HyperFile to S3 and Tableau")
-                self.hyperfile = crud.hyperfile.sync_upstreams(
-                    db=self.db, obj=self.hyperfile
+            try:
+                count = self._import_csv_to_hyper(
+                    hyper_path=file_path, export_path=export_path
                 )
-                logger.info(f"{self.unique_id} - Synced HyperFile to S3 and Tableau")
-                self.hyperfile = crud.hyperfile.update_status(
-                    self.db,
-                    obj=self.hyperfile,
-                    status=FileStatusEnum.file_available,
+            except HyperException as e:
+                logger.error(
+                    f"{self.unique_id} - Creating HyperFile from CSV Failed: {e}"
                 )
-                logger.info(f"{self.unique_id} - Imported and synced successfully")
-                return True
+                exists = os.path.exists(file_path)
+                logger.error(f"{self.unique_id} - HyperFile: {file_path} - {exists}")
+            else:
+                if count:
+                    logger.info(f"{self.unique_id} - CSV imported to Hyper")
+                    # Update HyperFile
+                    logger.info(
+                        f"{self.unique_id} - Syncing HyperFile to S3 and Tableau"
+                    )
+                    self.hyperfile = crud.hyperfile.sync_upstreams(
+                        db=self.db, obj=self.hyperfile
+                    )
+                    logger.info(
+                        f"{self.unique_id} - Synced HyperFile to S3 and Tableau"
+                    )
+                    self.hyperfile = crud.hyperfile.update_status(
+                        self.db,
+                        obj=self.hyperfile,
+                        status=FileStatusEnum.file_available,
+                    )
+                    logger.info(f"{self.unique_id} - Imported and synced successfully")
+                    return True
 
         logger.info(f"{self.unique_id} - CSV import failed")
         return False
