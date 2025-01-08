@@ -22,6 +22,10 @@ redis_conn = Redis.from_url(
 with Connection():
     if settings.SENTRY_DSN:
         sentry_sdk.init(settings.sentry_dsn, integrations=[RqIntegration()])
+
+    if not os.path.isdir(settings.MEDIA_ROOT):
+        os.mkdir(settings.MEDIA_ROOT)
+
     queue = Queue(QUEUE_NAME, connection=redis_conn)
 
     w = Worker(queue, connection=redis_conn)
