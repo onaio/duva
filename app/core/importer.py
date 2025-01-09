@@ -203,6 +203,12 @@ class Importer:
             obj=self.hyperfile,
             status=FileStatusEnum.file_unavailable,
         )
+        self.hyperfile.meta_data["message"] = f"{count} records in form."
+        self.hyperfile = crud.hyperfile.update(
+            self.db,
+            db_obj=self.hyperfile,
+            obj_in={"meta_data": self.hyperfile.meta_data},
+        )
 
         return False
 
