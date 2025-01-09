@@ -40,7 +40,7 @@ log_config = LogConfig(
     },
     loggers={
         "": {
-            "level": "DEBUG",
+            "level": "INFO",
             "handlers": ["console", "file"],
             "propagate": True,
         },
