@@ -18,7 +18,6 @@ class Settings(BaseSettings):
     APP_HOST: str = "127.0.0.1"
     APP_PORT: int = 8000
     MEDIA_ROOT: str = os.getenv("MEDIA_ROOT", "/app/media")
-    DEBUG: bool = False
     SECRET_KEY: str = Fernet.generate_key().decode()
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = (
