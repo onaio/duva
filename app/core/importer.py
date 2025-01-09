@@ -101,14 +101,7 @@ def import_to_hyper(hyperfile_id: int, schedule_cron: bool = True):
         hyperfile = schedule_import_to_hyper_job(db, hyperfile)
 
     with Importer(hyperfile=hyperfile, db=db) as importer:
-        success = importer.import_csv()
-        if not success:
-            sync_meta = hyperfile.meta_data.get(SYNC_FAILURES_METADATA, 0) + 1
-            hyperfile = crud.hyperfile.update(
-                db,
-                db_obj=hyperfile,
-                obj_in={"meta_data": {SYNC_FAILURES_METADATA: sync_meta}},
-            )
+        importer.import_csv()
 
 
 class Importer:
@@ -147,18 +140,30 @@ class Importer:
             logger.info(f"{self.unique_id} - Export downloaded")
         except RetryError as e:
             logger.info(f"{self.unique_id} - Retry Error: {e}")
-            self.hyperfile = crud.hyperfile.update_status(
+            self.hyperfile.meta_data[SYNC_FAILURES_METADATA] = (
+                self.hyperfile.meta_data.get(SYNC_FAILURES_METADATA, 0) + 1
+            )
+            self.hyperfile = crud.hyperfile.update(
                 self.db,
-                obj=self.hyperfile,
-                status=FileStatusEnum.latest_sync_failed,
+                db_obj=self.hyperfile,
+                obj_in={
+                    "meta_data": self.hyperfile.meta_data,
+                    "file_status": FileStatusEnum.latest_sync_failed,
+                },
             )
             return False
         except FailedExternalRequest as e:
             logger.error(f"{self.unique_id} - CSV export download failed: {e}")
-            self.hyperfile = crud.hyperfile.update_status(
+            self.hyperfile.meta_data[SYNC_FAILURES_METADATA] = (
+                self.hyperfile.meta_data.get(SYNC_FAILURES_METADATA, 0) + 1
+            )
+            self.hyperfile = crud.hyperfile.update(
                 self.db,
-                obj=self.hyperfile,
-                status=FileStatusEnum.latest_sync_failed,
+                db_obj=self.hyperfile,
+                obj_in={
+                    "meta_data": self.hyperfile.meta_data,
+                    "file_status": FileStatusEnum.latest_sync_failed,
+                },
             )
             return False
 
