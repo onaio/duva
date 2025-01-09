@@ -194,9 +194,16 @@ class Importer:
                         status=FileStatusEnum.file_available,
                     )
                     logger.info(f"{self.unique_id} - Imported and synced successfully")
+
                     return True
 
-        logger.info(f"{self.unique_id} - CSV import failed")
+        logger.info(f"{self.unique_id} - CSV import failed - {count} records found.")
+        self.hyperfile = crud.hyperfile.update_status(
+            self.db,
+            obj=self.hyperfile,
+            status=FileStatusEnum.file_unavailable,
+        )
+
         return False
 
     def _import_csv_to_hyper(
