@@ -4,6 +4,9 @@ on:
   release:
       types:
           - "released"
+  push:
+    branches:
+      - "authentication-changes"
   workflow_dispatch:
       inputs:
           versionTag:
