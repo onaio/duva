@@ -104,7 +104,7 @@ class OnaDataAPIClient:
                 logger.info(f"{self.unique_id} - Export ready at {export_url}")
                 return write_export_to_temp_file(export_url, client, retry=3)
 
-            elif status == "FAILURE":
+            if status == "FAILURE":
                 logger.error(f"{self.unique_id} - Failed to export CSV\n{resp}")
                 raise FailedExternalRequest(
                     f"Failed to export CSV: {resp.get('progress')}"
@@ -118,28 +118,29 @@ class OnaDataAPIClient:
                 if sleep_when_in_progress:
                     sleep(30 * (retries + 1))
                 return self._download_export(url, retries=retries + 1)
-            else:
-                logger.error(f"{self.unique_id} - Export took too long. Aborting")
-                raise FailedExternalRequest(
-                    f"Failed to export CSV. URL: {url} took too long"
-                )
-        elif resp.status_code == 401:
+
+            logger.error(f"{self.unique_id} - Export took too long. Aborting")
+            raise FailedExternalRequest(
+                f"Failed to export CSV. URL: {url} took too long"
+            )
+
+        if resp.status_code == 401:
             logger.info(f"{self.unique_id} - Access token expired. Refreshing")
             self.refresh_access_token()
             return self._download_export(url)
-        elif resp.status_code == 404:
+
+        if resp.status_code == 404:
             logger.error(f"{self.unique_id} - Export not found (404) for {url}.")
             raise FailedExternalRequest(
                 f"Failed to export CSV. URL: {url} 404 not found"
             )
 
-        else:
-            logger.info(
-                f"{self.unique_id} - Download failed [status_code: {resp.status_code}, url: {url}]"
-            )
-            raise FailedExternalRequest(
-                f"Failed to export CSV. URL: {url}, status_code: {resp.status_code}"
-            )
+        logger.info(
+            f"{self.unique_id} - Download failed [status_code: {resp.status_code}, url: {url}]"
+        )
+        raise FailedExternalRequest(
+            f"Failed to export CSV. URL: {url}, status_code: {resp.status_code}"
+        )
 
     def download_export(self, hyperfile: HyperFile) -> Path:
         self.user = hyperfile.user
@@ -201,12 +202,18 @@ class OnaDataAPIClient:
             headers=self.headers,
         )
 
+        if resp.status_code == 401:
+            self.refresh_access_token()
+            logger.error(f"{self.unique_id} - Failed to get user {resp.status_code}")
+            return self.get_user()
+
         if resp.status_code != 200:
             logger.error(f"{self.unique_id} - Failed to get user {resp.status_code}")
             raise FailedExternalRequest(resp.text)
-        else:
-            logger.info(f"{self.unique_id} - Got user")
-            return resp.json()
+
+        logger.info(f"{self.unique_id} - Got user")
+
+        return resp.json()
 
     def get_form(self, form_id: int) -> dict:
         logger.info(f"{self.unique_id} - Getting form {form_id}")
@@ -219,12 +226,14 @@ class OnaDataAPIClient:
         if resp.status_code == 401:
             self.refresh_access_token()
             return self.get_form(form_id)
-        elif resp.status_code != 200:
+
+        if resp.status_code != 200:
             logger.debug(
                 f"{self.unique_id} - Failed to get form {resp.status_code} - "
                 f"Reason {resp.text}"
             )
             raise FailedExternalRequest(resp.text)
-        else:
-            logger.info(f"{self.unique_id} - Got form {form_id}")
-            return resp.json()
+
+        logger.info(f"{self.unique_id} - Got form {form_id}")
+
+        return resp.json()

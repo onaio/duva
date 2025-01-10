@@ -103,7 +103,6 @@ def callback_oauth(
 
     try:
         access_token, refresh_token = security.request_onadata_credentials(server, code)
-        logger.info(f"Got {access_token} - {refresh_token} from Ona Data API.")
         client = onadata.OnaDataAPIClient(server.url, access_token)
         profile = client.get_user()
     except security.FailedToRequestOnaDataCredentials as e:
@@ -123,17 +122,14 @@ def callback_oauth(
                 access_token=access_token,
             )
             user = crud.user.create(db, obj_in=user_in)
-            logger.info("User created")
+            logger.info(f"User created: {user.username} - {user.id}")
         else:
-            logger.info(
-                f"To update {user.access_token} - {user.refresh_token} from DB."
-            )
             user_in = schemas.UserUpdate(
                 refresh_token=refresh_token,
                 access_token=access_token,
             )
             user = crud.user.update(db, db_obj=user, obj_in=user_in)
-            logger.info(f"User {user.username} - {user.id} updated.")
+            logger.info(f"User updated: {user.username} - {user.id}.")
 
         if redirect_url:
             # Create session for subsequent requests
