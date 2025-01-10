@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 
 import httpx
 import requests
+from fastapi import HTTPException
 from requests.sessions import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -192,6 +193,11 @@ class OnaDataAPIClient:
             )
             logger.info(f"{self.unique_id} - Refreshed access token")
         else:
+            if "invalid_grant" in resp.text:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Failed to refresh access token - invalid_grant",
+                )
             logger.error(f"{self.unique_id} - Failed to refresh access token")
             raise FailedExternalRequest(resp.text)
 
@@ -226,6 +232,15 @@ class OnaDataAPIClient:
         if resp.status_code == 401:
             self.refresh_access_token()
             return self.get_form(form_id)
+
+        if resp.status_code == 404:
+            try:
+                self.get_user()
+            except FailedExternalRequest:
+                logger.info("Trying refresh token")
+                self.refresh_access_token()
+                logger.info("Access token refreshed token")
+                return self.get_form(form_id)
 
         if resp.status_code != 200:
             logger.debug(
