@@ -206,6 +206,7 @@ class Importer:
         meta_data = {}
         meta_data.update(self.hyperfile.meta_data)
         meta_data["message"] = f"{count} records in form."
+        meta_data[SYNC_FAILURES_METADATA] = meta_data.get(SYNC_FAILURES_METADATA, 0) + 1
         self.hyperfile = crud.hyperfile.update(
             self.db,
             db_obj=self.hyperfile,
