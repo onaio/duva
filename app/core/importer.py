@@ -203,15 +203,16 @@ class Importer:
                     return True
 
         logger.info(f"{self.unique_id} - CSV import failed - {count} records found.")
-        self.hyperfile.meta_data["message"] = f"{count} records in form."
+        meta_data = {"message": f"{count} records in form."}
         self.hyperfile = crud.hyperfile.update(
             self.db,
             db_obj=self.hyperfile,
             obj_in={
-                "meta_data": self.hyperfile.meta_data,
+                "meta_data": meta_data,
                 "file_status": FileStatusEnum.file_unavailable,
             },
         )
+        logger.info(f"self.unique_id - CSV import failed - {self.hyperfile.meta_data}")
 
         return False
 
