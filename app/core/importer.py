@@ -193,10 +193,13 @@ class Importer:
                     logger.info(
                         f"{self.unique_id} - Synced HyperFile to S3 and Tableau"
                     )
-                    self.hyperfile = crud.hyperfile.update_status(
+                    self.hyperfile = crud.hyperfile.update(
                         self.db,
-                        obj=self.hyperfile,
-                        status=FileStatusEnum.file_available,
+                        db_obj=self.hyperfile,
+                        obj_in={
+                            "file_status": FileStatusEnum.file_available,
+                            "meta_data": {SYNC_FAILURES_METADATA: 0},
+                        },
                     )
                     logger.info(f"{self.unique_id} - Imported and synced successfully")
 
