@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     APP_DESCRIPTION: str = (
         "Duva is an application that converts CSV to Tableau Hyper Databases"
     )
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "0.2.0"
     APP_HOST: str = "127.0.0.1"
     APP_PORT: int = 8000
     MEDIA_ROOT: str = os.getenv("MEDIA_ROOT", "/app/media")
